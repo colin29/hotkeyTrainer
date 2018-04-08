@@ -1,0 +1,23 @@
+apply plugin: "java"
+
+sourceCompatibility = 1.6
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+sourceSets.main.java.srcDirs = [ "src/" ]
+
+
+
+def visuiVersion = '1.4.1-SNAPSHOT'
+
+dependencies {
+compile "com.kotcrab.vis:vis-ui:$visuiVersion"
+compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+}
+
+
+eclipse.project {
+    name = appName + "-core"
+}
+
+
+
