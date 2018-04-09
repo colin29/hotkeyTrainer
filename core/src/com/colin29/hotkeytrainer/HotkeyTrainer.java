@@ -1,5 +1,8 @@
 package com.colin29.hotkeytrainer;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,8 +28,17 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.colin29.hotkeytrainer.util.KeyTracker;
+import com.colin29.hotkeytrainer.util.My;
+import com.colin29.hotkeytrainer.util.MyIO;
+import com.colin29.hotkeytrainer.util.exception.ErrorCode;
+import com.colin29.hotkeytrainer.util.exception.MyException;
 import com.kotcrab.vis.ui.VisUI;
+import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
+import com.kotcrab.vis.ui.widget.file.FileChooser;
+import com.kotcrab.vis.ui.widget.file.FileChooser.Mode;
+import com.kotcrab.vis.ui.widget.file.FileChooser.SelectionMode;
 
 public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor {
 	SpriteBatch batch;
@@ -44,6 +56,12 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 	// Input
 	InputMultiplexer multiplexer = new InputMultiplexer();
 
+	FileChooser fileChooser;
+	
+	//Program Logic
+	
+	Deck deck; //current loaded deck
+	
 	@Override
 	public void create() {
 		batch = new SpriteBatch();
@@ -51,23 +69,32 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 		img = new Texture("badlogic.jpg");
 
 		stage = new Stage();
-		stage.setDebugAll(true);
 
 		// Load skins and fonts
 		VisUI.load();
 		skin = VisUI.getSkin();
 
+		initFileChooser();
+
 		initFonts();
 
+		// Init program logic
+		initHotkeyTrainer();
+		
 		// Create UI
 		createUI();
-		initHotkeyTrainer();
 
 		// Set Input
 		multiplexer.addProcessor(stage);
 		multiplexer.addProcessor(this);
 		Gdx.input.setInputProcessor(multiplexer);
 
+	}
+
+	private void initFileChooser() {
+		FileChooser.setDefaultPrefsName("holowyth.test.ui.filechooser");
+		fileChooser = new FileChooser(Mode.OPEN);
+		fileChooser.setSize(480, 480);
 	}
 
 	private void initFonts() {
@@ -81,6 +108,7 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT
 				| (Gdx.graphics.getBufferFormat().coverageSampling ? GL20.GL_COVERAGE_BUFFER_BIT_NV : 0));
 
+		stage.act(Gdx.graphics.getDeltaTime());
 		stage.draw();
 		// Render some text
 
@@ -114,8 +142,14 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 
 		lastKeyPressText = new Label("No Key Pressed Yet", labelStyle2);
 		lastKeyPressText.setColor(Color.BLACK);
-		stage.addActor(lastKeyPressText);
 		lastKeyPressText.setPosition(Gdx.graphics.getWidth() - lastKeyPressText.getWidth() - 20, 20);
+		stage.addActor(lastKeyPressText);
+		
+		hotkeyText.debug();
+		lastKeyPressText.debug();
+		
+		//openFileChooserToSaveDeck();
+		openFileChooserToLoadDeck();
 
 	}
 
@@ -137,45 +171,47 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 	String keyCombo;
 	KeyModifier modifier;
 	KeyPress curHotkey;
-	
+
 	ArrayList<KeyPress> hotkeyList = new ArrayList<KeyPress>();
 	private boolean done = false;
 	ListIterator<KeyPress> hotkeyIter;
-	
+
 	private void initHotkeyTrainer() {
-		keyCombo = "5";
-		modifier = KeyModifier.CTRL;
 		
-		hotkeyList.add(new KeyPress(KeyModifier.CTRL, Keys.NUM_4));
-		hotkeyList.add(new KeyPress(Keys.NUM_9));
-		hotkeyList.add(new KeyPress(Keys.NUM_6));
-		hotkeyIter = hotkeyList.listIterator();
+		Deck d = new Deck();
+		d.add(new KeyPress(KeyModifier.CTRL, Keys.NUM_4));
+		d.add(new KeyPress(Keys.NUM_9));
+		d.add(new KeyPress(Keys.NUM_6));
+		
+		hotkeyIter = d.listIterator();
+		
+		this.deck = d;
 
 	}
 
 	private void runHotkeyTrainer() {
 
-		if(done){
+		if (done) {
 			return;
 		}
-		
-		if(hotkeyList.isEmpty()){
+
+		if (hotkeyList.isEmpty()) {
 			System.out.println("Hotkey list given was empty");
 			done = true;
 			return;
 		}
-		if(hotkeyIter.nextIndex() == 0){
+		if (hotkeyIter.nextIndex() == 0) {
 			curHotkey = hotkeyIter.next();
 			hotkeyText.setText(curHotkey.toString());
 			hotkeyCompleted = false;
 		}
 
 		if (hotkeyCompleted) {
-			if(hotkeyIter.hasNext()){
+			if (hotkeyIter.hasNext()) {
 				curHotkey = hotkeyIter.next();
 				hotkeyText.setText(curHotkey.toString());
 				hotkeyCompleted = false;
-			}else{
+			} else {
 				curHotkey = null;
 				System.out.println("Done!");
 				hotkeyText.setText("Finished");
@@ -183,7 +219,6 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 			}
 		}
 	}
-
 
 	final int[] TRACKED_KEYS = new int[] { Keys.CONTROL_LEFT, Keys.CONTROL_RIGHT, Keys.ALT_LEFT, Keys.ALT_RIGHT,
 			Keys.SHIFT_LEFT, Keys.SHIFT_RIGHT };
@@ -194,24 +229,20 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 	@Override
 	public boolean keyDown(int keyCode) {
 
-		if(isModifierKey(keyCode)){
+		if (isModifierKey(keyCode)) {
 			return false;
 		}
 
-		//Make a keypress object
-		KeyPress pressed = new KeyPress(isModifierPressed(KeyModifier.CTRL),
-				isModifierPressed(KeyModifier.SHIFT),
-				isModifierPressed(KeyModifier.ALT),
-				keyCode);
-				
+		// Make a keypress object
+		KeyPress pressed = new KeyPress(isModifierPressed(KeyModifier.CTRL), isModifierPressed(KeyModifier.SHIFT),
+				isModifierPressed(KeyModifier.ALT), keyCode);
+
 		System.out.printf("Key pressed: %s\n", pressed.toString());
-		
-		
+
 		lastKeyPressText.setText(pressed.toString());
-		
+
 		if (!hotkeyCompleted && curHotkey != null) {
-			if (curHotkey.keyCode == keyCode && 
-					(curHotkey.ctrl == isModifierPressed(KeyModifier.CTRL)
+			if (curHotkey.keyCode == keyCode && (curHotkey.ctrl == isModifierPressed(KeyModifier.CTRL)
 					&& curHotkey.shift == isModifierPressed(KeyModifier.SHIFT)
 					&& curHotkey.alt == isModifierPressed(KeyModifier.ALT))) {
 				hotkeyCompleted = true;
@@ -239,14 +270,57 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 		}
 	}
 
-	private boolean isModifierKey(int keyCode){
+	private boolean isModifierKey(int keyCode) {
 		if (Arrays.asList(modifierKeys).contains(keyCode)) {
 			return true;
-		}else{
+		} else {
 			return false;
 		}
 	}
+
+
+	// Disk Operations
+
+	private void loadDeckFromDisk(String pathname) {
+		try {
+			Deck loadedDeck = MyIO.getDeckFromDisk(pathname);
+			loadDeck(loadedDeck);
+		} catch (MyException e) {
+			if (e.code == ErrorCode.IO_EXCEPTION) {
+				System.out.println("IO Error, deck not loaded");
+				return;
+			}
+		}
+	}
+	private void saveDeckToDisk(String pathname) throws IOException{
+		MyIO.saveDeckToDisk(pathname, this.deck);
+	}
 	
+	private void loadDeck(Deck newDeck) {
+		if(newDeck != null){
+			deckShutdown();
+			this.deck = null;
+		}else{
+			System.out.println("Error: new deck was null, deck not loaded");
+			return;
+		}
+	
+		System.out.println("New deck loaded");
+		this.deck = newDeck;
+		newDeck.hasUnsavedChanges = false;
+		System.out.println(newDeck.hotkeys.toString());
+
+		deckStartup(newDeck);
+	}
+	
+	private void deckStartup(Deck map) {
+		// TODO:
+	}
+	private void deckShutdown(){
+	}
+
+	
+
 	@Override
 	public boolean keyUp(int keycode) {
 		return false;
@@ -312,5 +386,46 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 		}
 		System.out.println("" + "---");
 	}
+
+	// Disk Operations
+	
+		private void openFileChooserToLoadDeck() {
+			System.out.println("Opening Load Dialog");
+			stage.addActor(fileChooser);
+	
+			fileChooser.setMode(Mode.OPEN);
+			fileChooser.setSelectionMode(SelectionMode.FILES);
+			fileChooser.setListener(new FileChooserAdapter() {
+				@Override
+				public void selected(Array<FileHandle> file) {
+					System.out.println("Selected file: " + file.get(0).file().getAbsolutePath());
+					loadDeckFromDisk(file.get(0).file().getAbsolutePath());
+				}
+			});
+	
+			fileChooser.setDirectory(My.mapsDirectory);
+		}
+
+		private void openFileChooserToSaveDeck() {
+			System.out.println("Opening Save Dialog");
+			
+			fileChooser.setMode(Mode.SAVE);
+			fileChooser.setSelectionMode(SelectionMode.FILES);
+			fileChooser.setListener(new FileChooserAdapter() {
+				@Override
+				public void selected(Array<FileHandle> file) {
+					System.out.println("Selected file to save to to " + file.get(0).file().getAbsolutePath());
+					try {
+						saveDeckToDisk(file.get(0).file().getAbsolutePath());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			
+			stage.addActor(fileChooser);
+			fileChooser.setDirectory(My.mapsDirectory);
+		}
+		
 
 }

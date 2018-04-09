@@ -2,8 +2,9 @@ package com.colin29.hotkeytrainer;
 
 import com.badlogic.gdx.Input.Keys;
 
-public class KeyPress {
+public class KeyPress implements java.io.Serializable {
 
+	private static final long serialVersionUID = 1;
 	
 	public final boolean ctrl;
 	public final boolean shift;
