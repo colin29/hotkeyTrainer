@@ -7,7 +7,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Paths;
 
-import com.colin29.hotkeytrainer.Deck;
+import com.colin29.hotkeytrainer.data.Deck;
 import com.colin29.hotkeytrainer.util.exception.ErrorCode;
 import com.colin29.hotkeytrainer.util.exception.MyException;
 

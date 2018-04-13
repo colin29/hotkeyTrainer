@@ -1,4 +1,4 @@
-package com.colin29.hotkeytrainer;
+package com.colin29.hotkeytrainer.data;
 
 import java.util.ArrayList;
 import java.util.ListIterator;
@@ -10,17 +10,17 @@ import java.util.ListIterator;
  */
 public class Deck implements java.io.Serializable {
 	
-	private static final long serialVersionUID = 1;
+	private static final long serialVersionUID = 2;
 	
-	public ArrayList<KeyPress> hotkeys = new ArrayList<KeyPress>();
+	public ArrayList<Card> hotkeys = new ArrayList<Card>();
 	
 	public transient boolean hasUnsavedChanges;
 	
-	public void add(KeyPress k){
+	public void add(Card k){
 		hotkeys.add(k);
 	}
 	
-	public ListIterator<KeyPress> listIterator(){
+	public ListIterator<Card> listIterator(){
 		return hotkeys.listIterator();
 	}
 }

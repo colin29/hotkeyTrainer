@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
@@ -29,20 +30,21 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.colin29.hotkeytrainer.data.Card;
+import com.colin29.hotkeytrainer.data.Deck;
+import com.colin29.hotkeytrainer.data.KeyPress;
 import com.colin29.hotkeytrainer.util.KeyTracker;
 import com.colin29.hotkeytrainer.util.My;
-import com.colin29.hotkeytrainer.util.MyIO;
-import com.colin29.hotkeytrainer.util.exception.ErrorCode;
-import com.colin29.hotkeytrainer.util.exception.MyException;
+import com.colin29.hotkeytrainer.util.MyGL;
+import com.colin29.hotkeytrainer.util.TestListView;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileChooser.Mode;
 import com.kotcrab.vis.ui.widget.file.FileChooser.SelectionMode;
 
-public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor {
+public class HotkeyTrainer extends Game implements InputProcessor {
 	SpriteBatch batch;
-	Texture img;
 
 	// Rendering and pipeline variables
 
@@ -56,17 +58,21 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 	// Input
 	InputMultiplexer multiplexer = new InputMultiplexer();
 
-	FileChooser fileChooser;
-	
-	//Program Logic
-	
-	Deck deck; //current loaded deck
-	
+	public FileChooser fileChooser;
+
+	// Program Logic
+
+	Deck deck; // current loaded deck
+
+	// Screens:
+	DecksMenuScreen decksMenu;
+	DeckEditorScreen deckEditor;
+	ReviewScreen reviewScreen;
+
 	@Override
 	public void create() {
 		batch = new SpriteBatch();
 		printDirectory(".");
-		img = new Texture("badlogic.jpg");
 
 		stage = new Stage();
 
@@ -78,17 +84,30 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 
 		initFonts();
 
-		// Init program logic
-		initHotkeyTrainer();
-		
-		// Create UI
-		createUI();
+		initScreens();
 
-		// Set Input
-		multiplexer.addProcessor(stage);
-		multiplexer.addProcessor(this);
-		Gdx.input.setInputProcessor(multiplexer);
+		this.setScreen(deckEditor);
 
+		// Logic to be moved out
+
+		// initFileChooser();
+
+		// // Init program logic
+		// initHotkeyTrainer();
+		//
+		// // Create UI
+		// createUI();
+		//
+		// // Set Input
+		// multiplexer.addProcessor(stage);
+		//// multiplexer.addProcessor(this);
+		// Gdx.input.setInputProcessor(multiplexer);
+
+	}
+
+	private void initScreens() {
+		decksMenu = new DecksMenuScreen();
+		deckEditor = new DeckEditorScreen(this);
 	}
 
 	private void initFileChooser() {
@@ -104,23 +123,12 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 
 	@Override
 	public void render() {
-		Gdx.gl.glClearColor(0.8f, 0.8f, 0.8f, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT
-				| (Gdx.graphics.getBufferFormat().coverageSampling ? GL20.GL_COVERAGE_BUFFER_BIT_NV : 0));
-
-		stage.act(Gdx.graphics.getDeltaTime());
-		stage.draw();
-		// Render some text
-
-		// Run Program Logic:
-		runHotkeyTrainer();
-
+		super.render(); // Calls Game.render, which will render the screens
 	}
 
 	@Override
 	public void dispose() {
 		batch.dispose();
-		img.dispose();
 		VisUI.dispose();
 	}
 
@@ -144,12 +152,9 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 		lastKeyPressText.setColor(Color.BLACK);
 		lastKeyPressText.setPosition(Gdx.graphics.getWidth() - lastKeyPressText.getWidth() - 20, 20);
 		stage.addActor(lastKeyPressText);
-		
+
 		hotkeyText.debug();
 		lastKeyPressText.debug();
-		
-		//openFileChooserToSaveDeck();
-		openFileChooserToLoadDeck();
 
 	}
 
@@ -174,17 +179,17 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 
 	ArrayList<KeyPress> hotkeyList = new ArrayList<KeyPress>();
 	private boolean done = false;
-	ListIterator<KeyPress> hotkeyIter;
+	ListIterator<Card> hotkeyIter;
 
 	private void initHotkeyTrainer() {
-		
+
 		Deck d = new Deck();
-		d.add(new KeyPress(KeyModifier.CTRL, Keys.NUM_4));
-		d.add(new KeyPress(Keys.NUM_9));
-		d.add(new KeyPress(Keys.NUM_6));
-		
+		d.add(new Card(new KeyPress(KeyModifier.CTRL, Keys.NUM_4)));
+		d.add(new Card(new KeyPress(Keys.NUM_9)));
+		d.add(new Card(new KeyPress(Keys.NUM_6)));
+
 		hotkeyIter = d.listIterator();
-		
+
 		this.deck = d;
 
 	}
@@ -195,29 +200,34 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 			return;
 		}
 
-		if (hotkeyList.isEmpty()) {
-			System.out.println("Hotkey list given was empty");
-			done = true;
-			return;
-		}
 		if (hotkeyIter.nextIndex() == 0) {
-			curHotkey = hotkeyIter.next();
-			hotkeyText.setText(curHotkey.toString());
-			hotkeyCompleted = false;
+			if (hotkeyIter.hasNext()) {
+				curHotkey = hotkeyIter.next().getSingle();
+				hotkeyText.setText(curHotkey.toString());
+				hotkeyCompleted = false;
+			} else {
+				System.out.println("Hotkey Deck given was empty");
+				finishDeck();
+				return;
+			}
 		}
 
 		if (hotkeyCompleted) {
 			if (hotkeyIter.hasNext()) {
-				curHotkey = hotkeyIter.next();
+				curHotkey = hotkeyIter.next().getSingle();
 				hotkeyText.setText(curHotkey.toString());
 				hotkeyCompleted = false;
 			} else {
 				curHotkey = null;
 				System.out.println("Done!");
-				hotkeyText.setText("Finished");
-				done = true;
+				finishDeck();
 			}
 		}
+	}
+
+	private void finishDeck() {
+		hotkeyText.setText("Finished");
+		done = true;
 	}
 
 	final int[] TRACKED_KEYS = new int[] { Keys.CONTROL_LEFT, Keys.CONTROL_RIGHT, Keys.ALT_LEFT, Keys.ALT_RIGHT,
@@ -278,49 +288,6 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 		}
 	}
 
-
-	// Disk Operations
-
-	private void loadDeckFromDisk(String pathname) {
-		try {
-			Deck loadedDeck = MyIO.getDeckFromDisk(pathname);
-			loadDeck(loadedDeck);
-		} catch (MyException e) {
-			if (e.code == ErrorCode.IO_EXCEPTION) {
-				System.out.println("IO Error, deck not loaded");
-				return;
-			}
-		}
-	}
-	private void saveDeckToDisk(String pathname) throws IOException{
-		MyIO.saveDeckToDisk(pathname, this.deck);
-	}
-	
-	private void loadDeck(Deck newDeck) {
-		if(newDeck != null){
-			deckShutdown();
-			this.deck = null;
-		}else{
-			System.out.println("Error: new deck was null, deck not loaded");
-			return;
-		}
-	
-		System.out.println("New deck loaded");
-		this.deck = newDeck;
-		newDeck.hasUnsavedChanges = false;
-		System.out.println(newDeck.hotkeys.toString());
-
-		deckStartup(newDeck);
-	}
-	
-	private void deckStartup(Deck map) {
-		// TODO:
-	}
-	private void deckShutdown(){
-	}
-
-	
-
 	@Override
 	public boolean keyUp(int keycode) {
 		return false;
@@ -376,9 +343,9 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 	}
 
 	public static void printDirectory(String dir) {
-		System.out.println(System.getProperty("user.dir"));
-
-		System.out.println("Directory\n---");
+		System.out.println("Directory: " + System.getProperty("user.dir"));
+		// System.out.println("Directory\n---");
+		System.out.println("---");
 		FileHandle h = new FileHandle(dir);
 		FileHandle[] files = h.list();
 		for (FileHandle f : files) {
@@ -386,46 +353,5 @@ public class HotkeyTrainer extends ApplicationAdapter implements InputProcessor 
 		}
 		System.out.println("" + "---");
 	}
-
-	// Disk Operations
-	
-		private void openFileChooserToLoadDeck() {
-			System.out.println("Opening Load Dialog");
-			stage.addActor(fileChooser);
-	
-			fileChooser.setMode(Mode.OPEN);
-			fileChooser.setSelectionMode(SelectionMode.FILES);
-			fileChooser.setListener(new FileChooserAdapter() {
-				@Override
-				public void selected(Array<FileHandle> file) {
-					System.out.println("Selected file: " + file.get(0).file().getAbsolutePath());
-					loadDeckFromDisk(file.get(0).file().getAbsolutePath());
-				}
-			});
-	
-			fileChooser.setDirectory(My.mapsDirectory);
-		}
-
-		private void openFileChooserToSaveDeck() {
-			System.out.println("Opening Save Dialog");
-			
-			fileChooser.setMode(Mode.SAVE);
-			fileChooser.setSelectionMode(SelectionMode.FILES);
-			fileChooser.setListener(new FileChooserAdapter() {
-				@Override
-				public void selected(Array<FileHandle> file) {
-					System.out.println("Selected file to save to to " + file.get(0).file().getAbsolutePath());
-					try {
-						saveDeckToDisk(file.get(0).file().getAbsolutePath());
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			});
-			
-			stage.addActor(fileChooser);
-			fileChooser.setDirectory(My.mapsDirectory);
-		}
-		
 
 }

@@ -1,6 +1,8 @@
-package com.colin29.hotkeytrainer;
+package com.colin29.hotkeytrainer.data;
 
 import com.badlogic.gdx.Input.Keys;
+import com.colin29.hotkeytrainer.HotkeyTrainer;
+import com.colin29.hotkeytrainer.HotkeyTrainer.KeyModifier;
 
 public class KeyPress implements java.io.Serializable {
 
