@@ -9,6 +9,7 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -43,13 +44,10 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 	private Table root;
 	private Skin skin;
 
-	
 	private ListView<Card> deckView;
-	
+
 	// Input
 	InputMultiplexer multiplexer = new InputMultiplexer();
-	
-
 
 	DeckEditorScreen(HotkeyTrainer app) {
 		this.app = app;
@@ -75,6 +73,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		Table footer = new Table();
 
 		// Create header
+
 		header.row().space(0, optionButtonSpacing, 0, optionButtonSpacing);
 		MyUI.textButton(header, "Decks", skin, () -> {
 		});
@@ -101,25 +100,25 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 		// Assemble root table
 		root.row().expandX(); // Have all sections expand to width of the screen
-		root.add(header);
+		root.add(header).fillX();
 		root.row().expandY().align(Align.topLeft); // Body section expands to cover main part of screen
 		root.add(body);
 		root.row().align(Align.left);
 		root.add(footer);
 		root.pack();
 
+		header.setBackground(MyGL.getBGDrawable(header, MyUI.visSkinColor()));
+
 		// Final tasks
 		stage.addActor(root);
 		// stage.setDebugAll(true);
 		// root.align(Align.center);
 
-		root.setDebug(true, true);
+		// root.setDebug(true, true);
 		// body.setDebug(false, true);
 
 	}
 
-	
-	
 	private void createBody(Table body) {
 
 		DeckWindow deckWindow = new DeckWindow();
@@ -141,7 +140,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		ArrayAdapter<Card, ?> adapter = deckWindow.getRemoveAdapter();
 
 		deckButtonTable.row();
-		MyUI.textButton(deckButtonTable, "Add Card", skin, openRecordWindow);
+		MyUI.textButton(deckButtonTable, "Add Card", skin, this::openRecordWindow);
 		deckButtonTable.row();
 		MyUI.textButton(deckButtonTable, "Delete Selected", skin, () -> {
 			System.out.println("delete cards");
@@ -158,15 +157,15 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 	}
 
-	private final VoidInterface openRecordWindow = () -> {
+	private void openRecordWindow() {
 		RecordKeyPressWindow record = new RecordKeyPressWindow(multiplexer, skin);
-		record.setCompletedListener(new RecordListener(){
+		record.setCompletedListener(new RecordListener() {
 			@Override
 			public void submit(ArrayList<KeyPress> keyPresses) {
 				// Make a card and add it to the collection.
-				if(!keyPresses.isEmpty()){
+				if (!keyPresses.isEmpty()) {
 					Card newCard = new Card(keyPresses);
-					deckView.getAdapter().add(newCard);
+					addCard(newCard, true);
 				}
 			}
 
@@ -174,15 +173,25 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 			public void complete() {
 				record.remove();
 			}
-			
+
 		});
 		record.pack();
-	
+
 		MyUI.centerOnStage(record);
 		record.toFront();
 		stage.addActor(record);
 	};
-	
+
+	public void addCard(Card card, boolean scrollToBottom) {
+		deckView.getAdapter().add(card);
+
+		if (scrollToBottom) {
+			deckView.rebuildView();
+			deckView.getScrollPane().layout();
+			deckView.getScrollPane().scrollTo(0, 0, 0, 0);
+		}
+	}
+
 	@Override
 	public void show() {
 		System.out.println("Showed Deck Editor");
@@ -320,7 +329,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 	@Override
 	public boolean keyDown(int keycode) {
-		
+
 		return false;
 	}
 

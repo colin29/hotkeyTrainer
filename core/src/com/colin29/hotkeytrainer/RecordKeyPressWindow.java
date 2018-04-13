@@ -21,6 +21,8 @@ public class RecordKeyPressWindow extends VisWindow implements InputProcessor {
 	private Card card; // card that is being constructed
 	private ArrayList<KeyPress> keyPresses = new ArrayList<KeyPress>();
 	
+	private static String CLEAR_STRING = "{Blank}";
+	
 	RecordListener completedListener;
 
 	public RecordKeyPressWindow(InputMultiplexer multiplexer, Skin skin) {
@@ -30,13 +32,13 @@ public class RecordKeyPressWindow extends VisWindow implements InputProcessor {
 		multiplexer.addProcessor(0, this);
 		
 		//Create Self
-		lastKeyPressText = new Label("", skin);
+		lastKeyPressText = new Label(CLEAR_STRING, skin);
 		row();
 		add(lastKeyPressText);
 		row();
 		add(new Label("Press Enter to Add Card", skin));
 		row();
-		add(new Label("Press Esc to Quit", skin));
+		add(new Label("Esc to Quit", skin));
 		
 	}
 	public void setCompletedListener(RecordListener completedListener){
@@ -60,7 +62,7 @@ public class RecordKeyPressWindow extends VisWindow implements InputProcessor {
 				completedListener.submit(keyPresses); //empty submission is allowed and can represent "recording cancelled"
 			}
 			keyPresses = new ArrayList<KeyPress>();
-			lastKeyPressText.setText("");
+			lastKeyPressText.setText(CLEAR_STRING);
 			return true;
 		}
 		if (keyCode == Keys.ESCAPE){
@@ -71,7 +73,7 @@ public class RecordKeyPressWindow extends VisWindow implements InputProcessor {
 		// Make a keypress object
 		KeyPress kp = new KeyPress(UIUtils.ctrl(), UIUtils.shift(), UIUtils.alt(), keyCode);
 		// Display what was just pressed
-		lastKeyPressText.setText(kp.toString());
+		lastKeyPressText.setText("{" + kp.toString() + "}");
 
 		// Edit the card's contents
 		if (keyPresses.isEmpty()) {

@@ -5,8 +5,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 public class MyGL {
 	public static void clearScreen(float r, float b, float g){
@@ -21,5 +23,11 @@ public class MyGL {
 		label.getStyle().background = new Image(new Texture(labelColor)).getDrawable();
 		
 		//TODO: Should dispose of pixmap, when? 
+	}
+	public static Drawable getBGDrawable(Actor actor, Color color){
+		Pixmap labelColor = new Pixmap((int) actor.getWidth(), (int) actor.getHeight(), Pixmap.Format.RGB888);
+		labelColor.setColor(color);
+		labelColor.fill();
+		return new Image(new Texture(labelColor)).getDrawable();
 	}
 }

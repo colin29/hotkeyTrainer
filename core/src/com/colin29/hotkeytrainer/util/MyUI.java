@@ -1,6 +1,7 @@
 package com.colin29.hotkeytrainer.util;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -121,5 +122,8 @@ public class MyUI {
 	
 	public static void printDimensions(String tableName, Table table){
 		System.out.printf("Table %s has dimensions (%s,%s)\n", tableName, table.getRows(), table.getColumns());
+	}
+	public static Color visSkinColor(){
+		return new Color(0x353535ff);
 	}
 }
