@@ -44,7 +44,9 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 	private Table root;
 	private Skin skin;
 
+	// Deck View
 	private ListView<Card> deckView;
+	private ArrayAdapter<Card, ?> adapter; 
 
 	// Input
 	InputMultiplexer multiplexer = new InputMultiplexer();
@@ -88,9 +90,11 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 		// Create footer
 		footer.row().align(Align.left).space(0, optionButtonSpacing, 0, optionButtonSpacing);
-		MyUI.textButton(footer, "Save Deck", skin, () -> {
+		MyUI.textButton(footer, "Save Deck", skin, () -> { 
+			openFileChooserToSaveDeck();
 		});
 		MyUI.textButton(footer, "Load Deck", skin, () -> {
+			openFileChooserToLoadDeck();
 		});
 		MyUI.textButton(footer, "New Deck", skin, () -> {
 		});
@@ -137,7 +141,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		Table deckButtonTable = new Table();
 		deckButtonTable.defaults().align(Align.topLeft).spaceBottom(15);
 
-		ArrayAdapter<Card, ?> adapter = deckWindow.getRemoveAdapter();
+		adapter  = deckWindow.getRemoveAdapter();
 
 		deckButtonTable.row();
 		MyUI.textButton(deckButtonTable, "Add Card", skin, this::openRecordWindow);
@@ -157,6 +161,10 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 	}
 
+	private void createTestDeck(){
+		
+	}
+	
 	private void openRecordWindow() {
 		RecordKeyPressWindow record = new RecordKeyPressWindow(multiplexer, skin);
 		record.setCompletedListener(new RecordListener() {
@@ -277,8 +285,12 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 	// Disk Operations
 
-	void deckStartup(Deck map) {
-		// TODO:
+	void deckStartup(Deck deck) {
+		// Display deck in the view.
+		adapter.clear();
+		for(Card c : deck.hotkeys){
+			adapter.add(c);
+		}
 	}
 
 	/**
