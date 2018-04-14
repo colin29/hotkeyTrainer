@@ -1,8 +1,8 @@
 package com.colin29.hotkeytrainer.data;
 
 import com.badlogic.gdx.Input.Keys;
-import com.colin29.hotkeytrainer.HotkeyTrainer;
-import com.colin29.hotkeytrainer.HotkeyTrainer.KeyModifier;
+import com.colin29.hotkeytrainer.HotkeyApp;
+import com.colin29.hotkeytrainer.HotkeyApp.KeyModifier;
 
 public class KeyPress implements java.io.Serializable {
 
@@ -16,7 +16,7 @@ public class KeyPress implements java.io.Serializable {
 	
 	
 	public KeyPress(int keyCode){
-		this(HotkeyTrainer.KeyModifier.NONE, keyCode);
+		this(HotkeyApp.KeyModifier.NONE, keyCode);
 	}
 	
 	private KeyPress(){ //dummy initilization for use by Kryo
@@ -28,10 +28,10 @@ public class KeyPress implements java.io.Serializable {
 	 * @param modifier
 	 * @param keyCode
 	 */
-	public KeyPress(HotkeyTrainer.KeyModifier modifier, int keyCode){
-		ctrl = (modifier == HotkeyTrainer.KeyModifier.CTRL); 
-		shift = (modifier == HotkeyTrainer.KeyModifier.SHIFT);
-		alt = (modifier == HotkeyTrainer.KeyModifier.ALT);
+	public KeyPress(HotkeyApp.KeyModifier modifier, int keyCode){
+		ctrl = (modifier == HotkeyApp.KeyModifier.CTRL); 
+		shift = (modifier == HotkeyApp.KeyModifier.SHIFT);
+		alt = (modifier == HotkeyApp.KeyModifier.ALT);
 		
 		this.keyCode = keyCode;
 	}

@@ -68,16 +68,6 @@ public class MyIO {
 		System.out.println("Writing Deck to disk finished");
 	}
 
-	// utility functions
-	public static String getCanonicalPath(String string) {
-		try {
-			return Paths.get(string).toRealPath().toString();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
 	public static void registerSerializers(Kryo kryo) {
 		kryo.register(Array.class, new Serializer<Array>() {
 			{
@@ -141,5 +131,15 @@ public class MyIO {
 				output.writeInt(Color.rgba8888(color));
 			}
 		});
+	}
+
+	// utility functions
+	public static String getCanonicalPath(String string) {
+		try {
+			return Paths.get(string).toRealPath().toString();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }
