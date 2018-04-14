@@ -7,17 +7,16 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.colin29.hotkeytrainer.HotkeyApp;
-import com.colin29.hotkeytrainer.HotkeyApp.KeyModifier;
 import com.colin29.hotkeytrainer.data.Card;
 import com.colin29.hotkeytrainer.data.Deck;
 import com.colin29.hotkeytrainer.data.KeyPress;
+import com.colin29.hotkeytrainer.data.KeyPress.ModifierKey;
 import com.colin29.hotkeytrainer.editor.KeyPressRecorder.RecordListener;
 import com.colin29.hotkeytrainer.util.My;
 import com.colin29.hotkeytrainer.util.MyGL;
@@ -31,6 +30,7 @@ import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileChooser.Mode;
 import com.kotcrab.vis.ui.widget.file.FileChooser.SelectionMode;
 import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
+import com.badlogic.gdx.files.FileHandle;
 
 public class DeckEditorScreen implements Screen, InputProcessor {
 
@@ -57,21 +57,21 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 		createUI();
 		createTestDeck();
-		// Set input
 	}
 
 	private void createTestDeck() {
 		Array<Card> array = new Array<Card>();
-		array.add(new Card(new KeyPress(KeyModifier.CTRL, Keys.NUM_5)));
+		array.add(new Card(new KeyPress(KeyPress.ModifierKey.CTRL, Keys.NUM_5)));
 		array.add(new Card(new KeyPress(Keys.NUM_9)));
 		array.add(new Card(new KeyPress(Keys.NUM_3)));
-		this.deck = new Deck(array);
-		putInDeckWindow(deck);
+		
+		Deck testDeck = new Deck(array);
+		loadDeck(testDeck);
+		putDeckInWindow();
 	}
 
 	private void createUI() {
 
-		final float generalSpacing = 20;
 		final float optionButtonSpacing = 10;
 
 		// Create root with three sections on top of each other (3x1)
@@ -99,10 +99,10 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		// Create footer
 		footer.row().align(Align.left).space(0, optionButtonSpacing, 0, optionButtonSpacing);
 		MyUI.textButton(footer, "Save Deck", skin, () -> {
-			openFileChooserToSaveDeck();
+			openFileChooserThenSaveDeck();
 		});
 		MyUI.textButton(footer, "Load Deck", skin, () -> {
-			openFileChooserToLoadDeck();
+			openFileChooserThenLoadDeck();
 		});
 		MyUI.textButton(footer, "New Deck", skin, () -> {
 		});
@@ -123,8 +123,6 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 		// Final tasks
 		stage.addActor(root);
-		// stage.setDebugAll(true);
-		// root.align(Align.center);
 
 		// root.setDebug(true, true);
 		// body.setDebug(false, true);
@@ -142,19 +140,16 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 		body.add(deckWindow).width(250).height(300);
 
-		// TestListView b = new TestListView();
-		// body.add(b);
-
 		// Create add and delete buttons
-		Table deckButtonTable = new Table();
-		deckButtonTable.defaults().align(Align.topLeft).spaceBottom(15);
+		Table deckButtons = new Table();
+		deckButtons.defaults().align(Align.topLeft).spaceBottom(15);
 
 		adapter = deckWindow.getRemoveAdapter();
 
-		deckButtonTable.row();
-		MyUI.textButton(deckButtonTable, "Add Card", skin, this::openRecordWindow);
-		deckButtonTable.row();
-		MyUI.textButton(deckButtonTable, "Delete Selected", skin, () -> {
+		deckButtons.row();
+		MyUI.textButton(deckButtons, "Add Card", skin, this::openRecordHotkeyWindow);
+		deckButtons.row();
+		MyUI.textButton(deckButtons, "Delete Selected", skin, () -> {
 			System.out.println("delete cards");
 			Array<Card> selected = new Array<Card>(adapter.getSelection()); // make a copy of the list because the
 																			// original may change as we remove
@@ -165,11 +160,14 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 		});
 
-		body.add(deckButtonTable);
+		body.add(deckButtons);
 
 	}
 
-	private void openRecordWindow() {
+	/**
+	 * Opens a hotkey recording window, then add any cards recorded
+	 */
+	private void openRecordHotkeyWindow() {
 		KeyPressRecorder record = new KeyPressRecorder(multiplexer, skin);
 		record.setCompletedListener(new RecordListener() {
 			@Override
@@ -194,7 +192,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		stage.addActor(record);
 	};
 
-	public void addCard(Card card, boolean scrollToBottom) {
+	void addCard(Card card, boolean scrollToBottom) {
 		deckView.getAdapter().add(card);
 
 		if (scrollToBottom) {
@@ -202,16 +200,6 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 			deckView.getScrollPane().layout();
 			deckView.getScrollPane().scrollTo(0, 0, 0, 0);
 		}
-	}
-
-	@Override
-	public void show() {
-		System.out.println("Showed Deck Editor");
-
-		multiplexer.clear();
-		multiplexer.addProcessor(stage);
-		multiplexer.addProcessor(this);
-		Gdx.input.setInputProcessor(multiplexer);
 	}
 
 	@Override
@@ -223,54 +211,51 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		stage.draw();
 
 	}
+	
+	// Deck loading and saving
 
-	@Override
-	public void resize(int width, int height) {
+	/**
+	 * Loads the editor's deck' contents into the DeckWindow. Note that the supplied Deck will not be notified of changes
+	 * 
+	 * @param deck
+	 */
+	private void putDeckInWindow() {
+		adapter.clear();
+		for (Card c : deck.getHotkeys()) {
+			adapter.add(c);
+		}
+	}
+	/**
+	 * Gets the decks contents from the deck window
+	 */
+	private void retrieveDeckFromWindow(){
+		deck.getHotkeys().clear();
+		for(Card c: adapter.iterable()){
+			deck.add(c);
+		}
 	}
 
-	@Override
-	public void pause() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void resume() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void hide() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void dispose() {
-		// TODO Auto-generated method stub
-
-	}
-
-	void loadDeck(Deck newDeck) {
+	/**
+	 * Given a deck argument, loads the deck logically into the editor
+	 */
+	private void loadDeck(Deck newDeck) {
 		if (newDeck != null) {
-			deckShutdown();
 			this.deck = null;
 		} else {
 			System.out.println("Error: new deck was null, deck not loaded");
 			return;
 		}
-
+	
 		System.out.println("New deck loaded");
 		this.deck = newDeck;
 		newDeck.hasUnsavedChanges = false;
-
-		this.deckStartup(newDeck);
+	
+		putDeckInWindow();
 	}
-
-	// Disk Operations
-
-	void loadDeckFromDisk(String pathname) {
+	/**
+	 * Given a pathname, retrieves the deck from disk and loads it.
+	 */
+	private void loadDeckFromDisk(String pathname) {
 		try {
 			Deck loadedDeck = MyIO.getDeckFromDisk(pathname, app.kryo);
 			loadDeck(loadedDeck);
@@ -282,47 +267,17 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		}
 	}
 
-	void saveDeckToDisk(String pathname) throws IOException {		
+	private void saveDeckToDisk(String pathname) throws IOException {		
 		retrieveDeckFromWindow();
 		MyIO.saveDeckToDisk(pathname, this.deck, app.kryo);
 	}
 
 	// Disk Operations
-
-	void deckStartup(Deck deck) {
-		putInDeckWindow(deck);
-	}
-
-	/**
-	 * Loads the deck's contents into the DeckWindow. Note that the supplied Deck will not be notified of changes
-	 * 
-	 * @param deck
-	 */
-	void putInDeckWindow(Deck deck) {
-		adapter.clear();
-		for (Card c : deck.hotkeys) {
-			adapter.add(c);
-		}
-	}
-	void retrieveDeckFromWindow(){
-		deck.hotkeys.clear();
-		for(Card c: adapter.iterable()){
-			deck.add(c);
-		}
-	}
-
-	/**
-	 * Is called when ever a deck is un-loaded.
-	 */
-	void deckShutdown() {
-	}
-
-	// Disk Operations
-
-	private void openFileChooserToLoadDeck() {
+	
+	private void openFileChooserThenLoadDeck() {
 		System.out.println("Opening Load Dialog");
 		stage.addActor(fileChooser);
-
+	
 		fileChooser.setMode(Mode.OPEN);
 		fileChooser.setSelectionMode(SelectionMode.FILES);
 		fileChooser.setListener(new FileChooserAdapter() {
@@ -332,13 +287,13 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 				loadDeckFromDisk(file.get(0).file().getAbsolutePath());
 			}
 		});
-
+	
 		fileChooser.setDirectory(My.mapsDirectory);
 	}
 
-	private void openFileChooserToSaveDeck() {
+	private void openFileChooserThenSaveDeck() {
 		System.out.println("Opening Save Dialog");
-
+	
 		fileChooser.setMode(Mode.SAVE);
 		fileChooser.setSelectionMode(SelectionMode.FILES);
 		fileChooser.setListener(new FileChooserAdapter() {
@@ -352,9 +307,47 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 				}
 			}
 		});
-
+	
 		stage.addActor(fileChooser);
 		fileChooser.setDirectory(My.mapsDirectory);
+	}
+
+	@Override
+	public void resize(int width, int height) {
+	}
+
+	@Override
+	public void pause() {
+		// TODO Auto-generated method stub
+	
+	}
+
+	@Override
+	public void resume() {
+		// TODO Auto-generated method stub
+	
+	}
+
+	@Override
+	public void show() {
+		System.out.println("Showed Deck Editor");
+	
+		multiplexer.clear();
+		multiplexer.addProcessor(stage);
+		multiplexer.addProcessor(this);
+		Gdx.input.setInputProcessor(multiplexer);
+	}
+
+	@Override
+	public void hide() {
+		// TODO Auto-generated method stub
+	
+	}
+
+	@Override
+	public void dispose() {
+		// TODO Auto-generated method stub
+	
 	}
 
 	@Override
@@ -404,4 +397,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	// Disk Operations
+
 }

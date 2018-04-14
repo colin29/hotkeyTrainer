@@ -1,11 +1,27 @@
 package com.colin29.hotkeytrainer.data;
 
 import com.badlogic.gdx.Input.Keys;
-import com.colin29.hotkeytrainer.HotkeyApp;
-import com.colin29.hotkeytrainer.HotkeyApp.KeyModifier;
+import com.colin29.hotkeytrainer.data.KeyPress.ModifierKey;
 
+
+/**
+ * Represents a single key combination. Eg. (ctrl+shift+a). Cannot be modified after creation.
+ * @author Colin Ta
+ *
+ */
 public class KeyPress implements java.io.Serializable {
 
+	public enum ModifierKey {
+		NONE, CTRL, SHIFT, ALT;
+	
+		public String toString() {
+			if (this == CTRL) {
+				return "CTRL";
+			} else {
+				return "";
+			}
+		}
+	}
 	private static final long serialVersionUID = 1;
 	
 	private boolean ctrl;
@@ -16,22 +32,13 @@ public class KeyPress implements java.io.Serializable {
 	
 	
 	public KeyPress(int keyCode){
-		this(HotkeyApp.KeyModifier.NONE, keyCode);
+		this(KeyPress.ModifierKey.NONE, keyCode);
 	}
 	
-	private KeyPress(){ //dummy initilization for use by Kryo
-		this(false, false, false, 0);
-	}
-	
-	/**
-	 * To make a keyPress with more than one modifier, you must use a string constructor
-	 * @param modifier
-	 * @param keyCode
-	 */
-	public KeyPress(HotkeyApp.KeyModifier modifier, int keyCode){
-		ctrl = (modifier == HotkeyApp.KeyModifier.CTRL); 
-		shift = (modifier == HotkeyApp.KeyModifier.SHIFT);
-		alt = (modifier == HotkeyApp.KeyModifier.ALT);
+	public KeyPress(KeyPress.ModifierKey modifier, int keyCode){
+		ctrl = (modifier == KeyPress.ModifierKey.CTRL); 
+		shift = (modifier == KeyPress.ModifierKey.SHIFT);
+		alt = (modifier == KeyPress.ModifierKey.ALT);
 		
 		this.keyCode = keyCode;
 	}
@@ -42,6 +49,11 @@ public class KeyPress implements java.io.Serializable {
 		this.keyCode = keyCode;
 	}
 	
+	@SuppressWarnings("unused")
+	private KeyPress(){ //dummy constructor for use by Kryo
+		this(false, false, false, 0);
+	}
+
 	public static boolean isAModifierKey(int keyCode){
 		int[] a = new int[] { Keys.CONTROL_LEFT, Keys.CONTROL_RIGHT, Keys.ALT_LEFT, Keys.ALT_RIGHT, Keys.SHIFT_LEFT, Keys.SHIFT_RIGHT};
 		return false;

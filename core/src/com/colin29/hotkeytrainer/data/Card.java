@@ -21,17 +21,17 @@ public class Card implements java.io.Serializable {
 		this.items.add(kp);
 	}
 	
-	public boolean isMultiple() {
-		return (items.size > 1);
-	}
-
 	public void setItems(Array<KeyPress> kps) {
 		if(kps.size==0){
 			throw new MyException(ErrorCode.INVALID_PARAMETERS);
 		}
-		items = kps;
+		items.clear();
+		items.addAll(kps);
 	}
 
+	public boolean isMultiple() {
+		return (items.size > 1);
+	}
 	public Array<KeyPress> getItems() {
 		return items;
 	}

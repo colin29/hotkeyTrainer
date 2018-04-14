@@ -152,21 +152,9 @@ public class HotkeyApp extends Game implements InputProcessor {
 
 	// Application
 
-	public enum KeyModifier {
-		NONE, CTRL, SHIFT, ALT;
-
-		public String toString() {
-			if (this == CTRL) {
-				return "CTRL";
-			} else {
-				return "";
-			}
-		}
-	}
-
 	private boolean hotkeyCompleted = false;
 	String keyCombo;
-	KeyModifier modifier;
+	KeyPress.ModifierKey modifier;
 	KeyPress curHotkey;
 
 	ArrayList<KeyPress> hotkeyList = new ArrayList<KeyPress>();
@@ -176,7 +164,7 @@ public class HotkeyApp extends Game implements InputProcessor {
 	private void initHotkeyTrainer() {
 
 		Deck d = new Deck();
-		d.add(new Card(new KeyPress(KeyModifier.CTRL, Keys.NUM_4)));
+		d.add(new Card(new KeyPress(KeyPress.ModifierKey.CTRL, Keys.NUM_4)));
 		d.add(new Card(new KeyPress(Keys.NUM_9)));
 		d.add(new Card(new KeyPress(Keys.NUM_6)));
 		hotkeyIter = d.iterator();
@@ -236,17 +224,17 @@ public class HotkeyApp extends Game implements InputProcessor {
 		}
 		
 		// Make a keypress object
-		KeyPress pressed = new KeyPress(isModifierPressed(KeyModifier.CTRL), isModifierPressed(KeyModifier.SHIFT),
-				isModifierPressed(KeyModifier.ALT), keyCode);
+		KeyPress pressed = new KeyPress(isModifierPressed(KeyPress.ModifierKey.CTRL), isModifierPressed(KeyPress.ModifierKey.SHIFT),
+				isModifierPressed(KeyPress.ModifierKey.ALT), keyCode);
 
 		System.out.printf("Key pressed: %s\n", pressed.toString());
 
 		lastKeyPressText.setText(pressed.toString());
 
 		if (!hotkeyCompleted && curHotkey != null) {
-			if (curHotkey.keyCode() == keyCode && (curHotkey.ctrl() == isModifierPressed(KeyModifier.CTRL)
-					&& curHotkey.shift() == isModifierPressed(KeyModifier.SHIFT)
-					&& curHotkey.alt() == isModifierPressed(KeyModifier.ALT))) {
+			if (curHotkey.keyCode() == keyCode && (curHotkey.ctrl() == isModifierPressed(KeyPress.ModifierKey.CTRL)
+					&& curHotkey.shift() == isModifierPressed(KeyPress.ModifierKey.SHIFT)
+					&& curHotkey.alt() == isModifierPressed(KeyPress.ModifierKey.ALT))) {
 				hotkeyCompleted = true;
 				return true;
 			}
@@ -254,16 +242,16 @@ public class HotkeyApp extends Game implements InputProcessor {
 		return false;
 	}
 
-	private boolean isModifierPressed(KeyModifier modifier) {
+	private boolean isModifierPressed(KeyPress.ModifierKey modifier) {
 		switch (modifier) {
 		case CTRL:
-			return (modifier == KeyModifier.CTRL
+			return (modifier == KeyPress.ModifierKey.CTRL
 					&& (keyTracker.isKeyDown(Keys.CONTROL_LEFT) || keyTracker.isKeyDown(Keys.CONTROL_RIGHT)));
 		case SHIFT:
-			return (modifier == KeyModifier.SHIFT
+			return (modifier == KeyPress.ModifierKey.SHIFT
 					&& (keyTracker.isKeyDown(Keys.SHIFT_LEFT) || keyTracker.isKeyDown(Keys.SHIFT_RIGHT)));
 		case ALT:
-			return (modifier == KeyModifier.CTRL
+			return (modifier == KeyPress.ModifierKey.CTRL
 					&& (keyTracker.isKeyDown(Keys.ALT_LEFT) || keyTracker.isKeyDown(Keys.ALT_RIGHT)));
 		case NONE:
 			return true;

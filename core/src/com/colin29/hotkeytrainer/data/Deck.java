@@ -1,9 +1,6 @@
 package com.colin29.hotkeytrainer.data;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.ListIterator;
-
 import com.badlogic.gdx.utils.Array;
 
 /**
@@ -15,15 +12,20 @@ public class Deck implements java.io.Serializable {
 	
 	private static final long serialVersionUID = 2;
 	
-	public Array<Card> hotkeys = new Array<Card>();
+	private Array<Card> hotkeys = new Array<Card>();
 	
 	public transient boolean hasUnsavedChanges;
 	
 	
+	
+	/**
+	 * Creates a Deck with the supplied cards
+	 * @param cards
+	 */
 	public Deck(Array<Card> cards){
 		this();
-		this.hotkeys = cards;
-		//TODO: may want to make a deep copy here, investigate
+		hotkeys.clear();
+		hotkeys.addAll(cards);
 	}
 	public Deck(){
 	}
@@ -34,5 +36,8 @@ public class Deck implements java.io.Serializable {
 	
 	public Iterator<Card> iterator(){
 		return hotkeys.iterator();
+	}
+	public Array<Card> getHotkeys(){
+		return hotkeys;
 	}
 }
