@@ -13,13 +13,14 @@ import com.kotcrab.vis.ui.widget.VisWindow;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.UIUtils;
+import com.badlogic.gdx.utils.Array;
 
 public class RecordKeyPressWindow extends VisWindow implements InputProcessor {
 
 	InputMultiplexer multiplexer;
 	private Label lastKeyPressText;
 	private Card card; // card that is being constructed
-	private ArrayList<KeyPress> keyPresses = new ArrayList<KeyPress>();
+	private Array<KeyPress> keyPresses = new Array<KeyPress>();
 	
 	private static String CLEAR_STRING = "{Blank}";
 	
@@ -61,7 +62,7 @@ public class RecordKeyPressWindow extends VisWindow implements InputProcessor {
 			if(completedListener != null){
 				completedListener.submit(keyPresses); //empty submission is allowed and can represent "recording cancelled"
 			}
-			keyPresses = new ArrayList<KeyPress>();
+			keyPresses = new Array<KeyPress>();
 			lastKeyPressText.setText(CLEAR_STRING);
 			return true;
 		}
@@ -76,7 +77,7 @@ public class RecordKeyPressWindow extends VisWindow implements InputProcessor {
 		lastKeyPressText.setText("{" + kp.toString() + "}");
 
 		// Edit the card's contents
-		if (keyPresses.isEmpty()) {
+		if (keyPresses.size == 0) {
 			keyPresses.add(kp);
 		} else {
 			keyPresses.set(0, kp); // Note: Multiple keyPresses in one card not supported yet.
@@ -131,7 +132,7 @@ public class RecordKeyPressWindow extends VisWindow implements InputProcessor {
 	}
 	
 	public interface RecordListener{
-		public void submit(ArrayList<KeyPress> keyPresses);
+		public void submit(Array<KeyPress> keyPresses);
 		public void complete();
 	}
 

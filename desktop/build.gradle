@@ -1,14 +1,22 @@
+repositories {
+    mavenCentral()
+}
+
 apply plugin: "java"
 
-sourceCompatibility = 1.6
+sourceCompatibility = 1.8
 sourceSets.main.java.srcDirs = [ "src/" ]
 
 project.ext.mainClassName = "com.colin29.hotkeytrainer.desktop.DesktopLauncher"
 project.ext.assetsDir = new File("../core/assets");
 
+
+
 dependencies {
 compile "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+compile 'com.esotericsoftware:kryo:4.0.2'
 }
+
 
 
 task run(dependsOn: classes, type: JavaExec) {

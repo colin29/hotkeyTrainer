@@ -8,16 +8,20 @@ public class KeyPress implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1;
 	
-	public final boolean ctrl;
-	public final boolean shift;
-	public final boolean alt;
+	private boolean ctrl;
+	private boolean shift;
+	private boolean alt;
 	
-	public final int keyCode;
+	private int keyCode;
+	
 	
 	public KeyPress(int keyCode){
 		this(HotkeyTrainer.KeyModifier.NONE, keyCode);
 	}
 	
+	private KeyPress(){ //dummy initilization for use by Kryo
+		this(false, false, false, 0);
+	}
 	
 	/**
 	 * To make a keyPress with more than one modifier, you must use a string constructor
@@ -54,4 +58,16 @@ public class KeyPress implements java.io.Serializable {
 		return s;
 	}
 	
+	public boolean ctrl(){
+		return ctrl;
+	}
+	public boolean shift(){
+		return shift;
+	}
+	public boolean alt(){
+		return alt;
+	}
+	public int keyCode(){
+		return keyCode;
+	}
 }

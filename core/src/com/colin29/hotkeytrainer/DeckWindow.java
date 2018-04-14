@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Array;
 import com.colin29.hotkeytrainer.HotkeyTrainer.KeyModifier;
 import com.colin29.hotkeytrainer.data.Card;
+import com.colin29.hotkeytrainer.data.Deck;
 import com.colin29.hotkeytrainer.data.KeyPress;
 import com.colin29.hotkeytrainer.util.MyGL;
 import com.kotcrab.vis.ui.VisUI;
@@ -32,9 +33,6 @@ public class DeckWindow extends VisWindow {
 		columnDefaults(0).left();
 
 		Array<Card> array = new Array<Card>();
-		array.add(new Card(new KeyPress(KeyModifier.CTRL, Keys.NUM_5)));
-		array.add(new Card(new KeyPress(Keys.NUM_9)));
-		array.add(new Card(new KeyPress(Keys.NUM_3)));
 		adapter = new DeckAdapter(array);
 		
 		view = new ListView<Card>(adapter);

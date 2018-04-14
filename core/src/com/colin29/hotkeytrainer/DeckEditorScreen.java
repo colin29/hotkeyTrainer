@@ -1,7 +1,6 @@
 package com.colin29.hotkeytrainer;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
@@ -9,12 +8,12 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.colin29.hotkeytrainer.HotkeyTrainer.KeyModifier;
 import com.colin29.hotkeytrainer.RecordKeyPressWindow.RecordListener;
 import com.colin29.hotkeytrainer.data.Card;
 import com.colin29.hotkeytrainer.data.Deck;
@@ -23,7 +22,6 @@ import com.colin29.hotkeytrainer.util.My;
 import com.colin29.hotkeytrainer.util.MyGL;
 import com.colin29.hotkeytrainer.util.MyIO;
 import com.colin29.hotkeytrainer.util.MyUI;
-import com.colin29.hotkeytrainer.util.MyUI.VoidInterface;
 import com.colin29.hotkeytrainer.util.exception.ErrorCode;
 import com.colin29.hotkeytrainer.util.exception.MyException;
 import com.kotcrab.vis.ui.util.adapter.ArrayAdapter;
@@ -46,7 +44,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 	// Deck View
 	private ListView<Card> deckView;
-	private ArrayAdapter<Card, ?> adapter; 
+	private ArrayAdapter<Card, ?> adapter;
 
 	// Input
 	InputMultiplexer multiplexer = new InputMultiplexer();
@@ -57,8 +55,17 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		this.skin = app.skin;
 
 		createUI();
-
+		createTestDeck();
 		// Set input
+	}
+
+	private void createTestDeck() {
+		Array<Card> array = new Array<Card>();
+		array.add(new Card(new KeyPress(KeyModifier.CTRL, Keys.NUM_5)));
+		array.add(new Card(new KeyPress(Keys.NUM_9)));
+		array.add(new Card(new KeyPress(Keys.NUM_3)));
+		this.deck = new Deck(array);
+		putInDeckWindow(deck);
 	}
 
 	private void createUI() {
@@ -90,7 +97,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 		// Create footer
 		footer.row().align(Align.left).space(0, optionButtonSpacing, 0, optionButtonSpacing);
-		MyUI.textButton(footer, "Save Deck", skin, () -> { 
+		MyUI.textButton(footer, "Save Deck", skin, () -> {
 			openFileChooserToSaveDeck();
 		});
 		MyUI.textButton(footer, "Load Deck", skin, () -> {
@@ -141,7 +148,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		Table deckButtonTable = new Table();
 		deckButtonTable.defaults().align(Align.topLeft).spaceBottom(15);
 
-		adapter  = deckWindow.getRemoveAdapter();
+		adapter = deckWindow.getRemoveAdapter();
 
 		deckButtonTable.row();
 		MyUI.textButton(deckButtonTable, "Add Card", skin, this::openRecordWindow);
@@ -161,17 +168,13 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 	}
 
-	private void createTestDeck(){
-		
-	}
-	
 	private void openRecordWindow() {
 		RecordKeyPressWindow record = new RecordKeyPressWindow(multiplexer, skin);
 		record.setCompletedListener(new RecordListener() {
 			@Override
-			public void submit(ArrayList<KeyPress> keyPresses) {
+			public void submit(Array<KeyPress> keyPresses) {
 				// Make a card and add it to the collection.
-				if (!keyPresses.isEmpty()) {
+				if (!(keyPresses.size == 0)) {
 					Card newCard = new Card(keyPresses);
 					addCard(newCard, true);
 				}
@@ -260,7 +263,6 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		System.out.println("New deck loaded");
 		this.deck = newDeck;
 		newDeck.hasUnsavedChanges = false;
-		System.out.println(newDeck.hotkeys.toString());
 
 		this.deckStartup(newDeck);
 	}
@@ -269,7 +271,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 	void loadDeckFromDisk(String pathname) {
 		try {
-			Deck loadedDeck = MyIO.getDeckFromDisk(pathname);
+			Deck loadedDeck = MyIO.getDeckFromDisk(pathname, app.kryo);
 			loadDeck(loadedDeck);
 		} catch (MyException e) {
 			if (e.code == ErrorCode.IO_EXCEPTION) {
@@ -279,17 +281,32 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		}
 	}
 
-	void saveDeckToDisk(String pathname) throws IOException {
-		MyIO.saveDeckToDisk(pathname, this.deck);
+	void saveDeckToDisk(String pathname) throws IOException {		
+		retrieveDeckFromWindow();
+		MyIO.saveDeckToDisk(pathname, this.deck, app.kryo);
 	}
 
 	// Disk Operations
 
 	void deckStartup(Deck deck) {
-		// Display deck in the view.
+		putInDeckWindow(deck);
+	}
+
+	/**
+	 * Loads the deck's contents into the DeckWindow. Note that the supplied Deck will not be notified of changes
+	 * 
+	 * @param deck
+	 */
+	void putInDeckWindow(Deck deck) {
 		adapter.clear();
-		for(Card c : deck.hotkeys){
+		for (Card c : deck.hotkeys) {
 			adapter.add(c);
+		}
+	}
+	void retrieveDeckFromWindow(){
+		deck.hotkeys.clear();
+		for(Card c: adapter.iterable()){
+			deck.add(c);
 		}
 	}
 

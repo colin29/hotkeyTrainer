@@ -1,16 +1,18 @@
 package com.colin29.hotkeytrainer.data;
 
-import java.util.ArrayList;
 
+import com.badlogic.gdx.utils.Array;
 import com.colin29.hotkeytrainer.util.exception.ErrorCode;
 import com.colin29.hotkeytrainer.util.exception.MyException;
 
 public class Card implements java.io.Serializable {
 	private static final long serialVersionUID = 1;
 
-	private ArrayList<KeyPress> items = new ArrayList<KeyPress>();
+	private Array<KeyPress> items = new Array<KeyPress>();
 	
-	public Card(ArrayList<KeyPress> kps){
+	private Card(){
+	}
+	public Card(Array<KeyPress> kps){
 		setItems(kps);
 		this.items = kps;
 	}
@@ -20,17 +22,17 @@ public class Card implements java.io.Serializable {
 	}
 	
 	public boolean isMultiple() {
-		return (items.size() > 1);
+		return (items.size > 1);
 	}
 
-	public void setItems(ArrayList<KeyPress> kps) {
-		if(kps.size()==0){
+	public void setItems(Array<KeyPress> kps) {
+		if(kps.size==0){
 			throw new MyException(ErrorCode.INVALID_PARAMETERS);
 		}
 		items = kps;
 	}
 
-	public ArrayList<KeyPress> getItems() {
+	public Array<KeyPress> getItems() {
 		return items;
 	}
 	

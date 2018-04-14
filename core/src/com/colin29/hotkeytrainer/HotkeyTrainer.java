@@ -1,26 +1,15 @@
 package com.colin29.hotkeytrainer;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
@@ -29,19 +18,15 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Array;
 import com.colin29.hotkeytrainer.data.Card;
 import com.colin29.hotkeytrainer.data.Deck;
 import com.colin29.hotkeytrainer.data.KeyPress;
 import com.colin29.hotkeytrainer.util.KeyTracker;
-import com.colin29.hotkeytrainer.util.My;
-import com.colin29.hotkeytrainer.util.MyGL;
-import com.colin29.hotkeytrainer.util.TestListView;
+import com.colin29.hotkeytrainer.util.MyIO;
+import com.esotericsoftware.kryo.Kryo;
 import com.kotcrab.vis.ui.VisUI;
-import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileChooser.Mode;
-import com.kotcrab.vis.ui.widget.file.FileChooser.SelectionMode;
 
 public class HotkeyTrainer extends Game implements InputProcessor {
 	SpriteBatch batch;
@@ -68,6 +53,12 @@ public class HotkeyTrainer extends Game implements InputProcessor {
 	DecksMenuScreen decksMenu;
 	DeckEditorScreen deckEditor;
 	ReviewScreen reviewScreen;
+	
+	// Serialization
+	Kryo kryo = new Kryo();
+	{
+		MyIO.registerSerializers(kryo);
+	}
 
 	@Override
 	public void create() {
@@ -179,7 +170,7 @@ public class HotkeyTrainer extends Game implements InputProcessor {
 
 	ArrayList<KeyPress> hotkeyList = new ArrayList<KeyPress>();
 	private boolean done = false;
-	ListIterator<Card> hotkeyIter;
+	Iterator<Card> hotkeyIter;
 
 	private void initHotkeyTrainer() {
 
@@ -187,24 +178,24 @@ public class HotkeyTrainer extends Game implements InputProcessor {
 		d.add(new Card(new KeyPress(KeyModifier.CTRL, Keys.NUM_4)));
 		d.add(new Card(new KeyPress(Keys.NUM_9)));
 		d.add(new Card(new KeyPress(Keys.NUM_6)));
-
-		hotkeyIter = d.listIterator();
-
+		hotkeyIter = d.iterator();
 		this.deck = d;
 
 	}
 
+	private boolean started = false;
 	private void runHotkeyTrainer() {
 
 		if (done) {
 			return;
 		}
 
-		if (hotkeyIter.nextIndex() == 0) {
+		if (!started) {
 			if (hotkeyIter.hasNext()) {
 				curHotkey = hotkeyIter.next().getSingle();
 				hotkeyText.setText(curHotkey.toString());
 				hotkeyCompleted = false;
+				started = true;
 			} else {
 				System.out.println("Hotkey Deck given was empty");
 				finishDeck();
@@ -252,9 +243,9 @@ public class HotkeyTrainer extends Game implements InputProcessor {
 		lastKeyPressText.setText(pressed.toString());
 
 		if (!hotkeyCompleted && curHotkey != null) {
-			if (curHotkey.keyCode == keyCode && (curHotkey.ctrl == isModifierPressed(KeyModifier.CTRL)
-					&& curHotkey.shift == isModifierPressed(KeyModifier.SHIFT)
-					&& curHotkey.alt == isModifierPressed(KeyModifier.ALT))) {
+			if (curHotkey.keyCode() == keyCode && (curHotkey.ctrl() == isModifierPressed(KeyModifier.CTRL)
+					&& curHotkey.shift() == isModifierPressed(KeyModifier.SHIFT)
+					&& curHotkey.alt() == isModifierPressed(KeyModifier.ALT))) {
 				hotkeyCompleted = true;
 				return true;
 			}
