@@ -13,9 +13,9 @@ public class Deck implements java.io.Serializable {
 	private static final long serialVersionUID = 2;
 	
 	private Array<Card> hotkeys = new Array<Card>();
+	private String name = "";
 	
 	public transient boolean hasUnsavedChanges;
-	
 	
 	
 	/**
@@ -28,6 +28,7 @@ public class Deck implements java.io.Serializable {
 		hotkeys.addAll(cards);
 	}
 	public Deck(){
+		hotkeys = new Array<Card>();
 	}
 	
 	public void add(Card k){
@@ -39,5 +40,11 @@ public class Deck implements java.io.Serializable {
 	}
 	public Array<Card> getHotkeys(){
 		return hotkeys;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
 	}
 }

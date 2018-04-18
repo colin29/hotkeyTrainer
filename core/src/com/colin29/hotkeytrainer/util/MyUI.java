@@ -37,6 +37,7 @@ public class MyUI {
 			}
 		});
 	}
+	
 
 	private static Cell<TextButton> textButton(Table table, String text, Skin skin, EventListener listener) {
 		TextButton button = new TextButton(text, skin);
@@ -125,5 +126,21 @@ public class MyUI {
 	}
 	public static Color visSkinColor(){
 		return new Color(0x353535ff);
+	}
+	
+	public static class HeaderTable extends Table{
+		public HeaderTable(Skin skin){
+			
+			row().space(0, My.optionButtonSpacing, 0, My.optionButtonSpacing);
+			
+			decksButton = MyUI.textButton(this, "Decks", skin, () -> {}).getActor();
+			editButton = MyUI.textButton(this, "Edit", skin, () -> {}).getActor();
+			pack();
+			
+			setBackground(MyGL.getBGDrawable(this, new Color(0x888888FF))); //(0x555555FF)
+		}
+		
+		public TextButton decksButton;
+		public TextButton editButton;
 	}
 }

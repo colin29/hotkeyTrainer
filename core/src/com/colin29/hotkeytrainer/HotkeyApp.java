@@ -18,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.colin29.hotkeytrainer.data.Card;
 import com.colin29.hotkeytrainer.data.Deck;
 import com.colin29.hotkeytrainer.data.KeyPress;
@@ -40,6 +41,9 @@ public class HotkeyApp extends Game implements InputProcessor {
 	public Skin skin;
 	BitmapFont font_size1;
 	BitmapFont font_size2;
+	
+	BitmapFont font2_size1;
+	BitmapFont font2_size2;
 
 	// Input
 	InputMultiplexer multiplexer = new InputMultiplexer();
@@ -48,12 +52,11 @@ public class HotkeyApp extends Game implements InputProcessor {
 
 	// Program Logic
 
-	Deck deck; // current loaded deck
 
 	// Screens:
-	DecksMenuScreen decksMenu;
-	DeckEditorScreen deckEditor;
-	ReviewScreen reviewScreen;
+	public DecksMenuScreen decksMenu;
+	public DeckEditorScreen deckEditor;
+	public ReviewScreen reviewScreen;
 	
 	// Serialization
 	public Kryo kryo = new Kryo();
@@ -78,7 +81,10 @@ public class HotkeyApp extends Game implements InputProcessor {
 
 		initScreens();
 
-		this.setScreen(deckEditor);
+//		this.setScreen(deckEditor);
+//		this.setScreen(decksMenu);
+		
+		this.setScreen(new ReviewScreen(makeTestDeck(), this));
 
 		// Logic to be moved out
 
@@ -98,7 +104,7 @@ public class HotkeyApp extends Game implements InputProcessor {
 	}
 
 	private void initScreens() {
-		decksMenu = new DecksMenuScreen();
+		decksMenu = new DecksMenuScreen(this);
 		deckEditor = new DeckEditorScreen(this);
 	}
 
@@ -111,6 +117,20 @@ public class HotkeyApp extends Game implements InputProcessor {
 	private void initFonts() {
 		font_size1 = generateFont("fonts/OpenSans.ttf", Color.BLACK, 32);
 		font_size2 = generateFont("fonts/OpenSans.ttf", Color.BLACK, 16);
+		
+		
+		font2_size1 = generateFont("fonts/OpenSans.ttf", Color.WHITE, 32);
+		font2_size2 = generateFont("fonts/OpenSans.ttf", Color.WHITE, 16);		
+	}
+	
+	private Deck makeTestDeck(){
+		Array<Card> array = new Array<Card>();
+		array.add(new Card(new KeyPress(KeyPress.ModifierKey.CTRL, Keys.NUM_5)));
+		array.add(new Card(new KeyPress(Keys.NUM_9)));
+		array.add(new Card(new KeyPress(Keys.NUM_3)));
+		
+		Deck testDeck = new Deck(array);
+		return testDeck;
 	}
 
 	@Override
@@ -150,123 +170,17 @@ public class HotkeyApp extends Game implements InputProcessor {
 
 	}
 
-	// Application
+	
 
-	private boolean hotkeyCompleted = false;
-	String keyCombo;
-	KeyPress.ModifierKey modifier;
-	KeyPress curHotkey;
 
-	ArrayList<KeyPress> hotkeyList = new ArrayList<KeyPress>();
-	private boolean done = false;
-	Iterator<Card> hotkeyIter;
-
-	private void initHotkeyTrainer() {
-
-		Deck d = new Deck();
-		d.add(new Card(new KeyPress(KeyPress.ModifierKey.CTRL, Keys.NUM_4)));
-		d.add(new Card(new KeyPress(Keys.NUM_9)));
-		d.add(new Card(new KeyPress(Keys.NUM_6)));
-		hotkeyIter = d.iterator();
-		this.deck = d;
-
-	}
-
-	private boolean started = false;
-	private void runHotkeyTrainer() {
-
-		if (done) {
-			return;
-		}
-
-		if (!started) {
-			if (hotkeyIter.hasNext()) {
-				curHotkey = hotkeyIter.next().getSingle();
-				hotkeyText.setText(curHotkey.toString());
-				hotkeyCompleted = false;
-				started = true;
-			} else {
-				System.out.println("Hotkey Deck given was empty");
-				finishDeck();
-				return;
-			}
-		}
-
-		if (hotkeyCompleted) {
-			if (hotkeyIter.hasNext()) {
-				curHotkey = hotkeyIter.next().getSingle();
-				hotkeyText.setText(curHotkey.toString());
-				hotkeyCompleted = false;
-			} else {
-				curHotkey = null;
-				System.out.println("Done!");
-				finishDeck();
-			}
-		}
-	}
-
-	private void finishDeck() {
-		hotkeyText.setText("Finished");
-		done = true;
-	}
+	
 
 	final int[] TRACKED_KEYS = new int[] { Keys.CONTROL_LEFT, Keys.CONTROL_RIGHT, Keys.ALT_LEFT, Keys.ALT_RIGHT,
 			Keys.SHIFT_LEFT, Keys.SHIFT_RIGHT };
 	KeyTracker keyTracker = new KeyTracker(TRACKED_KEYS, multiplexer);
-	static final Integer[] modifierKeys = { Keys.CONTROL_LEFT, Keys.CONTROL_RIGHT, Keys.ALT_LEFT, Keys.ALT_RIGHT,
-			Keys.SHIFT_LEFT, Keys.SHIFT_RIGHT };
 
-	@Override
-	public boolean keyDown(int keyCode) {
 
-		if (isModifierKey(keyCode)) {
-			return false;
-		}
-		
-		// Make a keypress object
-		KeyPress pressed = new KeyPress(isModifierPressed(KeyPress.ModifierKey.CTRL), isModifierPressed(KeyPress.ModifierKey.SHIFT),
-				isModifierPressed(KeyPress.ModifierKey.ALT), keyCode);
-
-		System.out.printf("Key pressed: %s\n", pressed.toString());
-
-		lastKeyPressText.setText(pressed.toString());
-
-		if (!hotkeyCompleted && curHotkey != null) {
-			if (curHotkey.keyCode() == keyCode && (curHotkey.ctrl() == isModifierPressed(KeyPress.ModifierKey.CTRL)
-					&& curHotkey.shift() == isModifierPressed(KeyPress.ModifierKey.SHIFT)
-					&& curHotkey.alt() == isModifierPressed(KeyPress.ModifierKey.ALT))) {
-				hotkeyCompleted = true;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean isModifierPressed(KeyPress.ModifierKey modifier) {
-		switch (modifier) {
-		case CTRL:
-			return (modifier == KeyPress.ModifierKey.CTRL
-					&& (keyTracker.isKeyDown(Keys.CONTROL_LEFT) || keyTracker.isKeyDown(Keys.CONTROL_RIGHT)));
-		case SHIFT:
-			return (modifier == KeyPress.ModifierKey.SHIFT
-					&& (keyTracker.isKeyDown(Keys.SHIFT_LEFT) || keyTracker.isKeyDown(Keys.SHIFT_RIGHT)));
-		case ALT:
-			return (modifier == KeyPress.ModifierKey.CTRL
-					&& (keyTracker.isKeyDown(Keys.ALT_LEFT) || keyTracker.isKeyDown(Keys.ALT_RIGHT)));
-		case NONE:
-			return true;
-		default:
-			throw new RuntimeException("Unhandled Case");
-		}
-	}
-
-	private boolean isModifierKey(int keyCode) {
-		if (Arrays.asList(modifierKeys).contains(keyCode)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+	
 
 	@Override
 	public boolean keyUp(int keycode) {
@@ -332,6 +246,12 @@ public class HotkeyApp extends Game implements InputProcessor {
 			System.out.println(f.name());
 		}
 		System.out.println("" + "---");
+	}
+
+	@Override
+	public boolean keyDown(int keycode) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

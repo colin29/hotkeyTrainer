@@ -1,67 +1,172 @@
 package com.colin29.hotkeytrainer;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
+import com.badlogic.gdx.utils.Align;
 import com.colin29.hotkeytrainer.data.Deck;
+import com.colin29.hotkeytrainer.util.My;
+import com.colin29.hotkeytrainer.util.MyGL;import com.colin29.hotkeytrainer.util.MyUI;
+import com.colin29.hotkeytrainer.util.MyUI.HeaderTable;
 
 /**
  * Menu that appears when you have a selected a deck. From there you can choose to edit or review the deck.
  * @author Colin Ta
  *
  */
-public class DeckScreen implements Screen {
-	
-	
+
 	/**
 	 * A new deck screen is created every time a deck is a selected
 	 */
-	DeckScreen(Deck deck){
-		createDeckMenu(deck);
-	}
-	
+	public class DeckScreen implements Screen {
 
-	private void createDeckMenu(Deck deck){
-		//TODO:
-	}
+		HotkeyApp app;
 
-	@Override
-	public void show() {
-		System.out.println("Showed Deck Screen");
-	}
+		// UI
+		private Stage stage = new Stage();
+		private Table root;
+		private Skin skin;
 
-	@Override
-	public void render(float delta) {
-		// TODO Auto-generated method stub
+		// Input
+		InputMultiplexer multiplexer = new InputMultiplexer();
 		
-	}
+		// App Logic
+		Deck deck;
 
-	@Override
-	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
+		DeckScreen(Deck deck, HotkeyApp app){
+			this.app = app;
+			this.skin = app.skin;
+			
+			this.deck = deck;
+			
+			createUI();
+		}
 		
-	}
 
-	@Override
-	public void pause() {
-		// TODO Auto-generated method stub
+		public void createUI() {
+			// Create root with three sections on top of each other (3x1)
+			root = new Table();
+			root.setFillParent(true);
+
+			HeaderTable header;
+			Table body = new Table();
+			Table footer = new Table();
+
+			// Create header
+			header = new HeaderTable(skin);
+
+			header.decksButton.addListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					app.setScreen(app.decksMenu);
+				}
+			});
+			header.editButton.addListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					app.setScreen(app.deckEditor);
+				}
+			});
+
+			createBody(body);
+
+			// Assemble root table
+			root.row().expandX(); // Have all sections expand to width of the screen
+			root.add(header).fillX();
+			root.row().expandY().align(Align.topLeft); // Body section expands to cover main part of screen
+			root.add(body).fill();
+			root.row().align(Align.left);
+			root.add(footer);
+			root.pack();
+
+			stage.addActor(root);
+			
+//			root.setDebug(true, true);	
+
+		}
+
+		public void createBody(Table body) {
+			body.align(Align.top);
+			body.row().expandX().height(150);
+			body.add();
+			body.row();
+			Table actions = new Table().align(Align.center);
+			actions.row().spaceRight(30);
+			
+			TextButtonStyle tbStyle = new TextButtonStyle(skin.get(TextButtonStyle.class));
+			tbStyle.font = app.font_size1;
+			
+			MyUI.textButton(actions, "Play", skin, () -> {
+				app.setScreen(new ReviewScreen(deck, app));
+			}).getActor().setStyle(tbStyle);
+			MyUI.textButton(actions, "Edit", skin, () -> {
+				openEditorWithThisDeck(this.deck);
+			}).getActor().setStyle(tbStyle);
+			
+			body.add(actions);
+
+		}
 		
+		private void openEditorWithThisDeck(Deck deck){
+			app.setScreen(app.deckEditor);
+			app.deckEditor.loadDeck(deck);
+		}
+
+		@Override
+		public void show() {
+			System.out.println("Showed Deck Screen");
+			multiplexer.clear();
+			multiplexer.addProcessor(stage);
+			Gdx.input.setInputProcessor(multiplexer);
+		}
+
+		@Override
+		public void render(float delta) {
+			MyGL.clearScreen(My.SECONDARY_COLOR.r, My.SECONDARY_COLOR.g, My.SECONDARY_COLOR.b);
+			stage.act(delta);
+			stage.draw();
+		}
+
+		@Override
+		public void resize(int width, int height) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void pause() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void resume() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void hide() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void dispose() {
+			// TODO Auto-generated method stub
+
+		}
+
 	}
 
-	@Override
-	public void resume() {
-		// TODO Auto-generated method stub
-		
-	}
 
-	@Override
-	public void hide() {
-		// TODO Auto-generated method stub
-		
-	}
 
-	@Override
-	public void dispose() {
-		// TODO Auto-generated method stub
-		
-	}
 
-}
