@@ -333,6 +333,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 	private void loadDeckFromDisk(String pathname) {
 		try {
 			Deck loadedDeck = MyIO.getDeckFromDisk(pathname, app.kryo);
+			loadedDeck.diskPath = pathname;
 			loadDeck(loadedDeck);
 		} catch (MyException e) {
 			if (e.code == ErrorCode.IO_EXCEPTION) {
@@ -383,8 +384,17 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 			}
 		});
 
-		stage.addActor(fileChooser);
 		fileChooser.setDirectory(My.mapsDirectory);
+		System.out.println(deck.diskPath);
+		if (deck.diskPath != null) {
+			FileHandle diskCopy = new FileHandle(deck.diskPath);
+			System.out.println(diskCopy.exists());
+			System.out.println(diskCopy.name());
+			fileChooser.setDefaultFileName(diskCopy.name());
+		} else {
+			fileChooser.setDefaultFileName("");
+		}
+		stage.addActor(fileChooser);
 	}
 
 	@Override

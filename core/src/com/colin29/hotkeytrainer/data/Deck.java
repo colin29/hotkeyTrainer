@@ -16,6 +16,7 @@ public class Deck implements java.io.Serializable {
 	private String name = "";
 	
 	public transient boolean hasUnsavedChanges;
+	public transient String diskPath; // path from which that deck was loaded from, or null.
 	
 	
 	/**

@@ -116,6 +116,7 @@ public class DecksMenuScreen implements Screen {
 		
 		for(String deckPath: results){
 			Deck deck = MyIO.getDeckFromDisk(My.mapsDirectory + "/" + deckPath, app.kryo);
+			deck.diskPath = My.mapsDirectory + "/" + deckPath;
 			decks.add(deck);
 		}
 		return decks;

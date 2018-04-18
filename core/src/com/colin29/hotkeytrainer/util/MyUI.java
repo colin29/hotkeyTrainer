@@ -117,8 +117,8 @@ public class MyUI {
 	}
 
 	public static void centerOnStage(Actor actor) {
-		actor.setPosition(Gdx.graphics.getWidth() / 2 - actor.getWidth() / 2,
-				Gdx.graphics.getHeight() / 2 - actor.getHeight() / 2);
+		actor.setPosition(Gdx.graphics.getWidth() / 2 - (int) actor.getWidth() / 2,
+				Gdx.graphics.getHeight() / 2 - (int) actor.getHeight() / 2);
 	}
 	
 	public static void printDimensions(String tableName, Table table){

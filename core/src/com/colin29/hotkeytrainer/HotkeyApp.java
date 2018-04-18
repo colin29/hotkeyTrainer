@@ -1,13 +1,11 @@
 package com.colin29.hotkeytrainer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -19,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.colin29.hotkeytrainer.ReviewScreen.ReviewSettings;
 import com.colin29.hotkeytrainer.data.Card;
 import com.colin29.hotkeytrainer.data.Deck;
 import com.colin29.hotkeytrainer.data.KeyPress;
@@ -31,6 +30,8 @@ import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileChooser.Mode;
 
 public class HotkeyApp extends Game implements InputProcessor {
+	public static float VOLUME_SFX = 1f;
+
 	SpriteBatch batch;
 
 	// Rendering and pipeline variables
@@ -51,7 +52,7 @@ public class HotkeyApp extends Game implements InputProcessor {
 	public FileChooser fileChooser;
 
 	// Program Logic
-
+	public ReviewSettings settings = new ReviewSettings();
 
 	// Screens:
 	public DecksMenuScreen decksMenu;
@@ -80,28 +81,21 @@ public class HotkeyApp extends Game implements InputProcessor {
 		initFonts();
 
 		initScreens();
+		
+		initSounds();
 
 //		this.setScreen(deckEditor);
-//		this.setScreen(decksMenu);
+		this.setScreen(decksMenu);
 		
-		this.setScreen(new ReviewScreen(makeTestDeck(), this));
+//		ReviewScreenSettings settings = new ReviewScreenSettings();
+//		settings.randomOrder = true;
+//		
+//		this.setScreen(new ReviewScreen(makeTestDeck(), settings, this));
+		
 
-		// Logic to be moved out
-
-		// initFileChooser();
-
-		// // Init program logic
-		// initHotkeyTrainer();
-		//
-		// // Create UI
-		// createUI();
-		//
-		// // Set Input
-		// multiplexer.addProcessor(stage);
-		//// multiplexer.addProcessor(this);
-		// Gdx.input.setInputProcessor(multiplexer);
 
 	}
+
 
 	private void initScreens() {
 		decksMenu = new DecksMenuScreen(this);
@@ -123,6 +117,11 @@ public class HotkeyApp extends Game implements InputProcessor {
 		font2_size2 = generateFont("fonts/OpenSans.ttf", Color.WHITE, 16);		
 	}
 	
+	Sound chime;
+	private void initSounds(){
+		chime = Gdx.audio.newSound(Gdx.files.internal("sfx/affirmative-decision-chime.wav"));
+	}
+	
 	private Deck makeTestDeck(){
 		Array<Card> array = new Array<Card>();
 		array.add(new Card(new KeyPress(KeyPress.ModifierKey.CTRL, Keys.NUM_5)));
@@ -136,6 +135,7 @@ public class HotkeyApp extends Game implements InputProcessor {
 	@Override
 	public void render() {
 		super.render(); // Calls Game.render, which will render the screens
+		VOLUME_SFX = settings.soundOn ? 1f : 0;
 	}
 
 	@Override

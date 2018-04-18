@@ -20,6 +20,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.UIUtils;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.colin29.hotkeytrainer.HotkeyApp;
 import com.colin29.hotkeytrainer.data.Card;
 import com.colin29.hotkeytrainer.data.Deck;
@@ -48,12 +49,14 @@ public class ReviewScreen implements Screen, InputProcessor {
 
 	// Logic
 	Deck deck;
+	ReviewSettings settings;
 
-	ReviewScreen(Deck deck, HotkeyApp app) {
+	ReviewScreen(Deck deck, ReviewSettings settings, HotkeyApp app) {
 		this.app = app;
 		this.skin = app.skin;
 
 		this.deck = deck;
+		this.settings = settings;
 
 		// Init Logic
 		initHotkeyTrainer();
@@ -164,7 +167,13 @@ public class ReviewScreen implements Screen, InputProcessor {
 	private Label lastKeyPressText;
 
 	private void initHotkeyTrainer() {
-		hotkeyIter = deck.iterator();
+		Array<Card> cardList = new Array<Card>(deck.getHotkeys());
+		
+		if(app.settings.randomOrder){
+			cardList.shuffle();
+		}
+		
+		hotkeyIter = cardList.iterator();
 		hotkeyText = new Label("Deck not started.", skin);
 	}
 
@@ -218,7 +227,7 @@ public class ReviewScreen implements Screen, InputProcessor {
 				return true;
 			}
 			if (keyCode == Keys.R || keyCode == Keys.GRAVE){
-				app.setScreen(new ReviewScreen(this.deck, app));
+				app.setScreen(new ReviewScreen(this.deck, this.settings, app));
 				return true;
 			}
 		}
@@ -235,10 +244,12 @@ public class ReviewScreen implements Screen, InputProcessor {
 
 		lastKeyPressText.setText(pressed.toString());
 
+		// See if the key pressed was the one required
 		if (!hotkeyCompleted && curHotkey != null) {
 			if (curHotkey.keyCode() == keyCode && (curHotkey.ctrl() == UIUtils.ctrl()
 					&& curHotkey.shift() == UIUtils.shift() && curHotkey.alt() == UIUtils.alt())) {
 				hotkeyCompleted = true;
+				app.chime.play(app.VOLUME_SFX);
 				return true;
 			}
 		}
@@ -363,6 +374,12 @@ public class ReviewScreen implements Screen, InputProcessor {
 	public boolean scrolled(int amount) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	static class ReviewSettings{
+		public boolean randomOrder = true;
+		public boolean soundOn = true;
+		
 	}
 
 }
