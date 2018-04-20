@@ -121,7 +121,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		// Final tasks
 		stage.addActor(root);
 
-		// root.setDebug(true, true);
+		 root.setDebug(true, true);
 		// body.setDebug(false, true);
 
 	}

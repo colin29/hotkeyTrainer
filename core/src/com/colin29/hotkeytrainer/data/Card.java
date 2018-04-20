@@ -1,6 +1,8 @@
 package com.colin29.hotkeytrainer.data;
 
 
+
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.utils.Array;
 import com.colin29.hotkeytrainer.util.exception.ErrorCode;
 import com.colin29.hotkeytrainer.util.exception.MyException;
@@ -55,13 +57,40 @@ public class Card implements java.io.Serializable {
 		return str;
 	}
 	
-	@Override
-	public boolean equals(Object other){
+	/**
+	 * returns true if two cards have the save contents
+	 */
+	public boolean sameContents(Object other){
 		if(other instanceof Card){
 			if(items.equals(((Card) other).getItems())){
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	static {
+		Card c1 = new Card(new KeyPress(KeyPress.ModifierKey.CTRL, Keys.NUM_5));
+		Card c2 = new Card(new KeyPress(Keys.NUM_9));
+		
+		Array<KeyPress> k3 = new Array<KeyPress>();
+		k3.add(new KeyPress(Keys.NUM_3), new KeyPress(Keys.NUM_4));
+		Array<KeyPress> k4 = new Array<KeyPress>();
+		k4.add(new KeyPress(Keys.NUM_3), new KeyPress(Keys.NUM_4));
+		Array<KeyPress> k5 = new Array<KeyPress>();
+		k5.add(new KeyPress(Keys.NUM_3), new KeyPress(false, false, true, Keys.NUM_4));
+		
+		Card c3 = new Card(k3);
+		Card c4 = new Card(k4);
+		Card c5 = new Card(k5);
+		System.out.println();
+		
+		assert c1.sameContents(c1);
+		assert c2.sameContents(c2);
+		assert !c1.sameContents(c2);
+		
+		assert c3.sameContents(c3);
+		assert c3.sameContents(c4);
+		assert !c3.sameContents(c5);
 	}
 }
