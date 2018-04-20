@@ -30,7 +30,7 @@ import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileChooser.Mode;
 
 public class HotkeyApp extends Game implements InputProcessor {
-	public static float VOLUME_SFX = 1f;
+	public float VOLUME_SFX = 1f;
 
 	SpriteBatch batch;
 
@@ -114,7 +114,8 @@ public class HotkeyApp extends Game implements InputProcessor {
 		
 		
 		font2_size1 = generateFont("fonts/OpenSans.ttf", Color.WHITE, 32);
-		font2_size2 = generateFont("fonts/OpenSans.ttf", Color.WHITE, 16);		
+		font2_size2 = generateFont("fonts/OpenSans.ttf", Color.WHITE, 16);	
+		
 	}
 	
 	Sound chime;

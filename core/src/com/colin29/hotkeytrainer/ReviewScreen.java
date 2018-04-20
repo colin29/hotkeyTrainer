@@ -10,6 +10,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -58,13 +59,24 @@ public class ReviewScreen implements Screen, InputProcessor {
 		this.deck = deck;
 		this.settings = settings;
 
+		
+		initSkins();
 		// Init Logic
 		initHotkeyTrainer();
 
 		createUI();
 	}
 
+	public void initSkins(){
+		labelStyle = new Label.LabelStyle(app.font_size1, null);
+		app.font_size1.getData().markupEnabled = true;
+		
+		labelStyle2 = new Label.LabelStyle(app.font_size2, Color.BLACK);
+	}
+	
 	public void createUI() {
+		
+		
 		// Create root with three sections on top of each other (3x1)
 		root = new Table();
 		root.setFillParent(true);
@@ -114,10 +126,6 @@ public class ReviewScreen implements Screen, InputProcessor {
 	 * Adds hotkey labels directly to the stage
 	 */
 	public void createHotkeyLabels(){
-		
-		
-		Label.LabelStyle labelStyle = new Label.LabelStyle(app.font_size1, Color.BLACK);
-		Label.LabelStyle labelStyle2 = new Label.LabelStyle(app.font_size2, Color.BLACK);
 
 		hotkeyText = new Label("", labelStyle);
 		hotkeyText.setPosition(Gdx.graphics.getWidth() / 2 - hotkeyText.getWidth() / 2,
@@ -159,10 +167,10 @@ public class ReviewScreen implements Screen, InputProcessor {
 	private Label hotkeyText;
 	// Application
 
-	private boolean hotkeyCompleted = false;
+	private boolean cardCompleted = false;
 	String keyCombo;
 	KeyPress.ModifierKey modifier;
-	KeyPress curHotkey;
+	Array<KeyPress> curCard;
 
 	private Label lastKeyPressText;
 
@@ -174,7 +182,7 @@ public class ReviewScreen implements Screen, InputProcessor {
 		}
 		
 		hotkeyIter = cardList.iterator();
-		hotkeyText = new Label("Deck not started.", skin);
+		hotkeyText = new Label("Deck not started.", labelStyle);
 	}
 
 	private void runHotkeyTrainer() {
@@ -184,9 +192,9 @@ public class ReviewScreen implements Screen, InputProcessor {
 
 		if (!started) {
 			if (hotkeyIter.hasNext()) {
-				curHotkey = hotkeyIter.next().getSingle();
-				hotkeyText.setText(curHotkey.toString());
-				hotkeyCompleted = false;
+				curCard = hotkeyIter.next().getItems();
+				rebuildHotkeyText();
+				cardCompleted = false;
 				started = true;
 			} else {
 				System.out.println("Hotkey Deck given was empty");
@@ -195,13 +203,13 @@ public class ReviewScreen implements Screen, InputProcessor {
 			}
 		}
 
-		if (hotkeyCompleted) {
+		if (cardCompleted) {
 			if (hotkeyIter.hasNext()) {
-				curHotkey = hotkeyIter.next().getSingle();
-				hotkeyText.setText(curHotkey.toString());
-				hotkeyCompleted = false;
+				curCard = hotkeyIter.next().getItems();
+				rebuildHotkeyText();
+				cardCompleted = false;
 			} else {
-				curHotkey = null;
+				curCard = null;
 				System.out.println("Done!");
 				finishDeck();
 			}
@@ -214,6 +222,7 @@ public class ReviewScreen implements Screen, InputProcessor {
 		done = true;
 	}
 
+	private int keyPressIndex = 0;
 	@Override
 	public boolean keyDown(int keyCode) {
 
@@ -245,15 +254,43 @@ public class ReviewScreen implements Screen, InputProcessor {
 		lastKeyPressText.setText(pressed.toString());
 
 		// See if the key pressed was the one required
-		if (!hotkeyCompleted && curHotkey != null) {
-			if (curHotkey.keyCode() == keyCode && (curHotkey.ctrl() == UIUtils.ctrl()
-					&& curHotkey.shift() == UIUtils.shift() && curHotkey.alt() == UIUtils.alt())) {
-				hotkeyCompleted = true;
-				app.chime.play(app.VOLUME_SFX);
+		if (!cardCompleted && curCard != null) {
+			KeyPress curKeyPress = curCard.get(keyPressIndex);
+			if (curKeyPress.keyCode() == keyCode && (curKeyPress.ctrl() == UIUtils.ctrl()
+					&& curKeyPress.shift() == UIUtils.shift() && curKeyPress.alt() == UIUtils.alt())) {
+				
+				keyPressIndex++;
+				rebuildHotkeyText();
+				app.chime.play(app.VOLUME_SFX);	
+				
+				if(keyPressIndex == curCard.size){
+					cardCompleted = true;
+					keyPressIndex = 0;
+				}
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	private void rebuildHotkeyText(){
+		String str = "[BLACK][#50c878]";
+		for(int i=0; i<curCard.size;i++){
+			if(i==keyPressIndex){
+				str += "[]"; //highlight the completed portion green
+			}
+			if(i<curCard.size-1){
+				str += curCard.get(i).toString() + ", ";
+			}else{
+				str += curCard.get(i).toString();
+			}
+		}
+//		str += "[]"; //highlight the completed portion green
+		System.out.println(str);
+		hotkeyText.setText(str);
+//		hotkeyText.setText("[#ff0000]l[#30ff00]i[#1e00ff]b[#fff600]G[#ff00ae]D[][#ff9000]");
+		
+
 	}
 
 	// private boolean isModifierPressed(KeyPress.ModifierKey modifier) {
@@ -277,6 +314,10 @@ public class ReviewScreen implements Screen, InputProcessor {
 			Keys.SHIFT_LEFT, Keys.SHIFT_RIGHT };
 
 	private Label doneMessage;
+
+	private Label.LabelStyle labelStyle;
+
+	private Label.LabelStyle labelStyle2;
 
 	private boolean isModifierKey(int keyCode) {
 		if (Arrays.asList(modifierKeys).contains(keyCode)) {
@@ -378,6 +419,7 @@ public class ReviewScreen implements Screen, InputProcessor {
 	
 	static class ReviewSettings{
 		public boolean randomOrder = true;
+		public boolean endlessReview = false; // When enabled, the review session will keep looping until the user manually exits
 		public boolean soundOn = true;
 		
 	}

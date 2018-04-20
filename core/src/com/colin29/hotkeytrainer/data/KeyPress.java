@@ -82,4 +82,17 @@ public class KeyPress implements java.io.Serializable {
 	public int keyCode(){
 		return keyCode;
 	}
+	@Override
+	public boolean equals(Object object){
+		if (object instanceof KeyPress){
+			KeyPress other = (KeyPress) object;
+			if(ctrl == other.ctrl || 
+					shift == other.shift ||
+					alt == other.alt || keyCode == other.keyCode
+					){
+				return true;
+			}
+		}
+		return false;
+	}
 }

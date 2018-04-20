@@ -44,6 +44,24 @@ public class Card implements java.io.Serializable {
 	}
 	
 	public String getKeyPressesAsText(){
-		return items.get(0).toString();
+		String str = "";
+		for(int i=0; i<items.size;i++){
+			if(i<items.size-1){
+				str += items.get(i).toString() + ", ";
+			}else{
+				str += items.get(i).toString();
+			}
+		}
+		return str;
+	}
+	
+	@Override
+	public boolean equals(Object other){
+		if(other instanceof Card){
+			if(items.equals(((Card) other).getItems())){
+				return true;
+			}
+		}
+		return false;
 	}
 }

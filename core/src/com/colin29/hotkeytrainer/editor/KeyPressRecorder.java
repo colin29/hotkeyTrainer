@@ -18,7 +18,7 @@ import com.badlogic.gdx.utils.Array;
 public class KeyPressRecorder extends VisWindow implements InputProcessor {
 
 	InputMultiplexer multiplexer;
-	private Label lastKeyPressText;
+	private Label curInputText;
 	private Card card; // card that is being constructed
 	private Array<KeyPress> keyPresses = new Array<KeyPress>();
 	
@@ -33,9 +33,9 @@ public class KeyPressRecorder extends VisWindow implements InputProcessor {
 		multiplexer.addProcessor(0, this);
 		
 		//Create Self
-		lastKeyPressText = new Label(CLEAR_STRING, skin);
+		curInputText = new Label(CLEAR_STRING, skin);
 		row();
-		add(lastKeyPressText);
+		add(curInputText);
 		row();
 		add(new Label("Press Enter to Add Card", skin));
 		row();
@@ -63,26 +63,58 @@ public class KeyPressRecorder extends VisWindow implements InputProcessor {
 				completedListener.submit(keyPresses); //empty submission is allowed and can represent "recording cancelled"
 			}
 			keyPresses = new Array<KeyPress>();
-			lastKeyPressText.setText(CLEAR_STRING);
+			curInputText.setText(CLEAR_STRING);
 			return true;
 		}
 		if (keyCode == Keys.ESCAPE){
 			dispose();
 			completedListener.complete();
+			return true;
+		}
+		if (keyCode == Keys.BACKSPACE){
+			if(keyPresses.size > 0){
+				keyPresses.removeIndex(keyPresses.size-1);
+			}
+			rebuildInputText();
+			return true;
 		}
 
 		// Make a keypress object
 		KeyPress kp = new KeyPress(UIUtils.ctrl(), UIUtils.shift(), UIUtils.alt(), keyCode);
-		// Display what was just pressed
-		lastKeyPressText.setText("{" + kp.toString() + "}");
+
 		
 		// Edit the card's contents
-		if (keyPresses.size == 0) {
-			keyPresses.add(kp);
-		} else {
-			keyPresses.set(0, kp); // Note: Multiple keyPresses in one card not supported yet.
-		}
+		
+		keyPresses.add(kp);
+		
+//		if (keyPresses.size == 0) {
+//			keyPresses.add(kp);
+//		} else {
+//			keyPresses.set(0, kp); // Note: Multiple keyPresses in one card not supported yet.
+//		}
+		
+		// Refresh the text display:
+		rebuildInputText();
+
+		
+		
+		
+		
+		
 		return true;
+	}
+	
+	public void rebuildInputText(){
+		String str = "{";
+		for(int i=0; i<keyPresses.size;i++){
+			if(i<keyPresses.size-1){
+				str += keyPresses.get(i).toString() + ",";
+			}else{
+				str += keyPresses.get(i).toString();
+			}
+		}
+		str += "}";
+		curInputText.setText(str);
 	}
 
 	public boolean isModifierKey(int keyCode) {
