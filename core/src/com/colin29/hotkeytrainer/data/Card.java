@@ -56,6 +56,9 @@ public class Card implements java.io.Serializable {
 		}
 		return str;
 	}
+	public String toString(){
+		return getKeyPressesAsText();
+	}
 	
 	/**
 	 * returns true if two cards have the save contents

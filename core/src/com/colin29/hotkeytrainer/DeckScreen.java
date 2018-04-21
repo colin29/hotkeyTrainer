@@ -124,6 +124,8 @@ public class DeckScreen implements Screen {
 		body.add(actions);
 
 	}
+	
+	
 
 	private void openOptionsPanel(){
 			final Dialog optionsDialog = new Dialog("Review options", skin){
@@ -148,6 +150,8 @@ public class DeckScreen implements Screen {
 			// Add Property names and fields
 			final CheckBox b1 = new CheckBox("Play cards in random order", skin);
 			final CheckBox b2 = new CheckBox("Enable Sound", skin);
+			final CheckBox b3 = new CheckBox("Avoid card repeats", skin);
+			final CheckBox b4 = new CheckBox("Endless Mode", skin);
 			
 			contents.defaults().align(Align.left).space(10);
 			contents.pad(10);
@@ -156,16 +160,24 @@ public class DeckScreen implements Screen {
 			contents.row();
 			contents.add(b2);
 			contents.row();
+			contents.add(b3);
+			contents.row();
+			contents.add(b4);
+			contents.row();
 			
 			// Synchronize buttons with current settings:
 			b1.setChecked(app.settings.randomOrder);
 			b2.setChecked(app.settings.soundOn);
-
+			b3.setChecked(app.settings.avoidRepeats);
+			b4.setChecked(app.settings.endlessMode);
+			
 			// Add Buttons
 			buttons.align(Align.right);
 			MyUI.textButton(buttons, "Confirm", skin,() -> {
 				app.settings.randomOrder = b1.isChecked();
 				app.settings.soundOn = b2.isChecked();
+				app.settings.avoidRepeats = b3.isChecked();
+				app.settings.endlessMode = b4.isChecked();
 				optionsDialog.remove();
 			});
 			MyUI.textButton(buttons, "Cancel", skin, ()->{
@@ -196,6 +208,7 @@ public class DeckScreen implements Screen {
 		MyGL.clearScreen(My.SECONDARY_COLOR.r, My.SECONDARY_COLOR.g, My.SECONDARY_COLOR.b);
 		stage.act(delta);
 		stage.draw();
+		MyUI.updateTitleBar(this.deck);
 	}
 
 	@Override
@@ -218,8 +231,7 @@ public class DeckScreen implements Screen {
 
 	@Override
 	public void hide() {
-		// TODO Auto-generated method stub
-
+		MyUI.clearTitleBar();
 	}
 
 	@Override

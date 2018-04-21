@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.colin29.hotkeytrainer.data.Deck;
 
 public class MyUI {
 
@@ -142,5 +143,25 @@ public class MyUI {
 		
 		public TextButton decksButton;
 		public TextButton editButton;
+	}
+	
+
+	/**
+	 * Adds the name of the current deck to the title bar
+	 */
+	public static void updateTitleBar(Deck deck) {
+		if (deck != null) {
+			if(deck.getName() == ""){
+				Gdx.graphics.setTitle(My.appTitle + " --- " + "Untitled Deck");
+			}else{
+				Gdx.graphics.setTitle(My.appTitle + " --- " + deck.getName());
+			}
+			
+		} else {
+			Gdx.graphics.setTitle(My.appTitle + " --- " + "No deck loaded");
+		}
+	}
+	public static void clearTitleBar(){
+		Gdx.graphics.setTitle(My.appTitle);
 	}
 }

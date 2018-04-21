@@ -121,7 +121,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		// Final tasks
 		stage.addActor(root);
 
-		 root.setDebug(true, true);
+//		 root.setDebug(true, true);
 		// body.setDebug(false, true);
 
 	}
@@ -270,19 +270,11 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		stage.act(delta);
 		stage.draw();
 
-		updateTitleBar();
+		MyUI.updateTitleBar(this.deck);
 	}
 
-	/**
-	 * Adds the name of the current deck to the title bar
-	 */
-	private void updateTitleBar() {
-		if (deck != null) {
-			Gdx.graphics.setTitle(My.appTitle + " --- " + deck.getName());
-		} else {
-			Gdx.graphics.setTitle(My.appTitle + " --- " + "No deck loaded");
-		}
-	}
+	
+
 
 	// Deck loading and saving
 
@@ -425,7 +417,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 
 	@Override
 	public void hide() {
-		Gdx.graphics.setTitle(My.appTitle);
+		MyUI.clearTitleBar();
 	}
 
 	@Override

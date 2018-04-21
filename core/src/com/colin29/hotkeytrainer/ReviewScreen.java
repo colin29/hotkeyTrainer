@@ -22,12 +22,14 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.UIUtils;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Queue;
 import com.colin29.hotkeytrainer.HotkeyApp;
 import com.colin29.hotkeytrainer.data.Card;
 import com.colin29.hotkeytrainer.data.Deck;
 import com.colin29.hotkeytrainer.data.KeyPress;
 import com.colin29.hotkeytrainer.util.My;
 import com.colin29.hotkeytrainer.util.MyGL;
+import com.colin29.hotkeytrainer.util.MyUI;
 import com.colin29.hotkeytrainer.util.MyUI.HeaderTable;
 
 /**
@@ -59,24 +61,22 @@ public class ReviewScreen implements Screen, InputProcessor {
 		this.deck = deck;
 		this.settings = settings;
 
-		
 		initSkins();
 		// Init Logic
-		initHotkeyTrainer();
 
 		createUI();
+		initHotkeyTrainer();
 	}
 
-	public void initSkins(){
+	public void initSkins() {
 		labelStyle = new Label.LabelStyle(app.font_size1, null);
 		app.font_size1.getData().markupEnabled = true;
-		
+
 		labelStyle2 = new Label.LabelStyle(app.font_size2, Color.BLACK);
 	}
-	
+
 	public void createUI() {
-		
-		
+
 		// Create root with three sections on top of each other (3x1)
 		root = new Table();
 		root.setFillParent(true);
@@ -113,7 +113,8 @@ public class ReviewScreen implements Screen, InputProcessor {
 		root.pack();
 
 		stage.addActor(root);
-		
+		// stage.setDebugAll(true);
+
 		createHotkeyLabels();
 
 	}
@@ -121,11 +122,11 @@ public class ReviewScreen implements Screen, InputProcessor {
 	public void createBody(Table body) {
 
 	}
-	
+
 	/**
 	 * Adds hotkey labels directly to the stage
 	 */
-	public void createHotkeyLabels(){
+	public void createHotkeyLabels() {
 
 		hotkeyText = new Label("", labelStyle);
 		hotkeyText.setPosition(Gdx.graphics.getWidth() / 2 - hotkeyText.getWidth() / 2,
@@ -135,55 +136,64 @@ public class ReviewScreen implements Screen, InputProcessor {
 
 		lastKeyPressText = new Label("No Key Pressed Yet", labelStyle2);
 		lastKeyPressText.setPosition(Gdx.graphics.getWidth() - lastKeyPressText.getWidth() - 20, 10);
-//		lastKeyPressText.setPosition(Gdx.graphics.getWidth() / 2 - lastKeyPressText.getWidth() / 2,
-//				hotkeyText.getY()-200);
+		// lastKeyPressText.setPosition(Gdx.graphics.getWidth() / 2 - lastKeyPressText.getWidth() / 2,
+		// hotkeyText.getY()-200);
 		lastKeyPressText.setAlignment(Align.center);
 		stage.addActor(lastKeyPressText);
 
-		
 		doneMessage = new Label("Press Enter to return, or R to start again", labelStyle2);
-		doneMessage.setPosition(Gdx.graphics.getWidth() / 2 - doneMessage.getWidth() / 2,
-				hotkeyText.getY()-50);
+		doneMessage.setPosition(Gdx.graphics.getWidth() / 2 - doneMessage.getWidth() / 2, hotkeyText.getY() - 50); // below
+																													// hotkey
+																													// text
 		doneMessage.setVisible(false);
 		System.out.printf("Done Message pos: %s %s \n", doneMessage.getX(), doneMessage.getY());
 		stage.addActor(doneMessage);
-		
-		
-//		hotkeyText.debug();
-//		lastKeyPressText.debug();
+
+		progressText = new Label("", labelStyle2);
+		progressText.setPosition(10, 10);
+		progressText.setAlignment(Align.center);
+		stage.addActor(progressText);
+
+		// hotkeyText.debug();
+		// lastKeyPressText.debug();
 	}
 
 	// Review logic
 
 	ArrayList<KeyPress> hotkeyList = new ArrayList<KeyPress>();
 	private boolean done = false;
-	Iterator<Card> hotkeyIter;
 
 	private boolean started = false;
+
+	private Array<Card> cardList;
+	private Array<KeyPress> curCardItems;
+	private Card curCard;
+	private boolean cardCompleted = false;
+
+	private int curIndex;
 	
+	private int cardsFinishedCount = 0;
+
+	// UI
 	/**
 	 * Displays what keypress the user should press next
 	 */
 	private Label hotkeyText;
-	// Application
-
-	private boolean cardCompleted = false;
-	String keyCombo;
-	KeyPress.ModifierKey modifier;
-	Array<KeyPress> curCard;
-
 	private Label lastKeyPressText;
+	private Label progressText;
 
 	private void initHotkeyTrainer() {
-		Array<Card> cardList = new Array<Card>(deck.getHotkeys());
-		
-		if(app.settings.randomOrder){
+		cardList = new Array<Card>(deck.getHotkeys());
+
+		if (app.settings.randomOrder) {
 			cardList.shuffle();
 		}
-		
-		hotkeyIter = cardList.iterator();
-		hotkeyText = new Label("Deck not started.", labelStyle);
+
+		updateProgressText();
 	}
+
+	private Queue<Card> doNotRepeat = new Queue<Card>();
+	private int avoidRepeatsDepth = 1;
 
 	private void runHotkeyTrainer() {
 		if (done) {
@@ -191,10 +201,20 @@ public class ReviewScreen implements Screen, InputProcessor {
 		}
 
 		if (!started) {
-			if (hotkeyIter.hasNext()) {
-				curCard = hotkeyIter.next().getItems();
-				rebuildHotkeyText();
-				cardCompleted = false;
+			curIndex = -1;
+			if (curIndex + 1 < cardList.size) {
+				retrieveNextItem();
+				curIndex++;
+				if(app.settings.endlessMode){ //for endless mode, avoid repeats when restarting the deck
+					if(isCurCardDuplicate()){
+						cardCompleted = true; // treat as if this card has been completed.
+					}else{
+						updateDoNotRepeatList();
+					}
+				}else{
+					updateDoNotRepeatList();
+				}
+				
 				started = true;
 			} else {
 				System.out.println("Hotkey Deck given was empty");
@@ -204,92 +224,175 @@ public class ReviewScreen implements Screen, InputProcessor {
 		}
 
 		if (cardCompleted) {
-			if (hotkeyIter.hasNext()) {
-				curCard = hotkeyIter.next().getItems();
-				rebuildHotkeyText();
-				cardCompleted = false;
-			} else {
-				curCard = null;
-				System.out.println("Done!");
-				finishDeck();
+			while (true) {
+				// Get next item as usual...
+				if (curIndex + 1 < cardList.size) {
+					retrieveNextItem();
+					curIndex++;
+				} else {
+					curCardItems = null;
+					curIndex++;
+					System.out.println("Done!");
+					finishDeck();
+					return;
+				}
+
+				if (app.settings.avoidRepeats) {
+					// ...But keep trying again if the current card is an exact duplicate of one of the last n cards
+					// shown
+					if (isCurCardDuplicate()) {
+						continue;
+					} else {
+						updateDoNotRepeatList();
+						return;
+					}
+
+				}else{
+					break;
+				}
 			}
+		}
+
+	}
+
+	private boolean isCurCardDuplicate(){
+		boolean existsDuplicate = false;
+		for (Card c : doNotRepeat) {
+			System.out.printf("%s == %s --> %s\n", c.toString(), curCard.toString(),
+					c.sameContents(curCard));
+			if (c.sameContents(curCard)) {
+				System.out.println("Card skipped");
+				cardCompleted = true;
+				existsDuplicate = true;
+				break;
+			}
+		}
+		if (existsDuplicate) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	private void updateDoNotRepeatList() {
+		// Mantain list of n last cards
+		doNotRepeat.addFirst(curCard);
+		if (doNotRepeat.size > avoidRepeatsDepth) {
+			doNotRepeat.removeLast();
+		}
+	}
+
+	private void retrieveNextItem() {
+		curCard = cardList.get(curIndex + 1);
+		curCardItems = cardList.get(curIndex + 1).getItems();
+		updateHotkeyText();
+		cardCompleted = false;
+	}
+	
+	private void restartDeck(){
+		done = false;
+		curIndex = -1;
+		started = false;
+		if(app.settings.randomOrder){
+			cardList.shuffle();
 		}
 	}
 
 	private void finishDeck() {
-		hotkeyText.setText("Finished");
-		doneMessage.setVisible(true);
-		done = true;
+		
+		if(app.settings.endlessMode){
+			restartDeck();
+		}else{
+			hotkeyText.setText("Finished");
+			doneMessage.setVisible(true);
+			done = true;
+	
+		}
 	}
 
 	private int keyPressIndex = 0;
+
 	@Override
 	public boolean keyDown(int keyCode) {
 
 		if (isModifierKey(keyCode)) {
 			return false;
 		}
-		
-		if(done){
-			if (keyCode == Keys.ENTER){
+
+		if (done) {
+			if (keyCode == Keys.ENTER) {
 				app.setScreen(new DeckScreen(this.deck, app));
 				return true;
 			}
-			if (keyCode == Keys.R || keyCode == Keys.GRAVE){
+			if (keyCode == Keys.R || keyCode == Keys.GRAVE) {
 				app.setScreen(new ReviewScreen(this.deck, this.settings, app));
 				return true;
 			}
 		}
-		
-		if (keyCode == Keys.ESCAPE){
+
+		if (keyCode == Keys.ESCAPE) {
 			app.setScreen(new DeckScreen(this.deck, app));
 			return true;
 		}
-		
-		// Make a keypress object
+
 		KeyPress pressed = new KeyPress(UIUtils.ctrl(), UIUtils.shift(), UIUtils.alt(), keyCode);
-
 		System.out.printf("Key pressed: %s\n", pressed.toString());
-
 		lastKeyPressText.setText(pressed.toString());
 
+		processUserKeyPress(keyCode);
+
+		return true;
+	}
+
+	private void processUserKeyPress(int keyCode) {
 		// See if the key pressed was the one required
-		if (!cardCompleted && curCard != null) {
-			KeyPress curKeyPress = curCard.get(keyPressIndex);
+		KeyPress curKeyPress = curCardItems.get(keyPressIndex);
+		if (!cardCompleted && curCardItems != null) {
 			if (curKeyPress.keyCode() == keyCode && (curKeyPress.ctrl() == UIUtils.ctrl()
 					&& curKeyPress.shift() == UIUtils.shift() && curKeyPress.alt() == UIUtils.alt())) {
-				
+
 				keyPressIndex++;
-				rebuildHotkeyText();
-				app.chime.play(app.VOLUME_SFX);	
-				
-				if(keyPressIndex == curCard.size){
+				updateHotkeyText();
+
+				app.chime.play(app.VOLUME_SFX);
+
+				if (keyPressIndex == curCardItems.size) {
+					System.out.println("Card completed");
 					cardCompleted = true;
+					cardsFinishedCount +=1;
 					keyPressIndex = 0;
 				}
-				return true;
 			}
 		}
-		return false;
 	}
-	
-	private void rebuildHotkeyText(){
+
+	private void updateProgressText() {
+		String str;
+		if(app.settings.endlessMode){
+			str = String.format("Cards Cleared: %o (%o in deck)", cardsFinishedCount, cardList.size);
+		}else{
+			str = String.format("Cards Left: %o", cardList.size - curIndex);
+		}
+		
+		
+		progressText.setText(str);
+		progressText.pack();
+	}
+
+	private void updateHotkeyText() {
 		String str = "[BLACK][#50c878]";
-		for(int i=0; i<curCard.size;i++){
-			if(i==keyPressIndex){
-				str += "[]"; //highlight the completed portion green
+		for (int i = 0; i < curCardItems.size; i++) {
+			if (i == keyPressIndex) {
+				str += "[]"; // highlight the completed portion green
 			}
-			if(i<curCard.size-1){
-				str += curCard.get(i).toString() + ", ";
-			}else{
-				str += curCard.get(i).toString();
+			if (i < curCardItems.size - 1) {
+				str += curCardItems.get(i).toString() + ", ";
+			} else {
+				str += curCardItems.get(i).toString();
 			}
 		}
-//		str += "[]"; //highlight the completed portion green
-		System.out.println(str);
+		// System.out.println(str);
 		hotkeyText.setText(str);
-//		hotkeyText.setText("[#ff0000]l[#30ff00]i[#1e00ff]b[#fff600]G[#ff00ae]D[][#ff9000]");
-		
 
 	}
 
@@ -341,8 +444,10 @@ public class ReviewScreen implements Screen, InputProcessor {
 		MyGL.clearScreen(My.MAIN_BG_COLOR.r, My.MAIN_BG_COLOR.g, My.MAIN_BG_COLOR.b);
 		stage.act(delta);
 		stage.draw();
-		
+
 		runHotkeyTrainer();
+		updateProgressText();
+		MyUI.updateTitleBar(deck);
 	}
 
 	@Override
@@ -365,7 +470,7 @@ public class ReviewScreen implements Screen, InputProcessor {
 
 	@Override
 	public void hide() {
-		// TODO Auto-generated method stub
+		MyUI.clearTitleBar();
 
 	}
 
@@ -416,12 +521,16 @@ public class ReviewScreen implements Screen, InputProcessor {
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
-	static class ReviewSettings{
+
+	static class ReviewSettings {
 		public boolean randomOrder = true;
-		public boolean endlessReview = false; // When enabled, the review session will keep looping until the user manually exits
+		public boolean avoidRepeats = true;
+		public boolean endlessReview = false; // When enabled, the review session will keep looping until the user
+												// manually exits
 		public boolean soundOn = true;
 		
+		public boolean endlessMode = false;
+
 	}
 
 }
