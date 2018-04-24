@@ -1,6 +1,7 @@
 package com.colin29.hotkeytrainer.data;
 
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.scenes.scene2d.utils.UIUtils;
 import com.colin29.hotkeytrainer.data.KeyPress.ModifierKey;
 
 
@@ -68,10 +69,10 @@ public class KeyPress implements java.io.Serializable {
 		
 		switch (keyCode){
 		case MOUSE_LEFT:
-			s = "(Lclick)";
+			s = "Click";
 			break;
 		case MOUSE_RIGHT:
-			s= "(Rclick)";
+			s= "RClick";
 		}
 		
 		//Prepend modifiers in reverse order

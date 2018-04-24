@@ -130,10 +130,16 @@ public class ReviewScreen implements Screen, InputProcessor {
 	public void createHotkeyLabels() {
 
 		hotkeyText = new Label("", labelStyle);
+		
+		hotkeyText.setWrap(true);  //need to wrap text for long hotkey combinations
+		hotkeyText.setWidth(Gdx.graphics.getWidth());
+		
 		hotkeyText.setPosition(Gdx.graphics.getWidth() / 2 - hotkeyText.getWidth() / 2,
 				Gdx.graphics.getHeight() * 0.66f);
 		hotkeyText.setAlignment(Align.center);
 		stage.addActor(hotkeyText);
+		
+		
 
 		lastKeyPressText = new Label("No Key Pressed Yet", labelStyle2);
 		lastKeyPressText.setPosition(Gdx.graphics.getWidth() - lastKeyPressText.getWidth() - 20, 10);
@@ -206,7 +212,7 @@ public class ReviewScreen implements Screen, InputProcessor {
 			if (curIndex + 1 < cardList.size) {
 				retrieveNextItem();
 				curIndex++;
-				if(app.settings.endlessMode){ //for endless mode, avoid repeats when restarting the deck
+				if(app.settings.endlessMode && cardList.size > 1){ //for endless mode, avoid repeats when restarting the deck
 					if(isCurCardDuplicate()){
 						cardCompleted = true; // treat as if this card has been completed.
 					}else{
@@ -336,9 +342,7 @@ public class ReviewScreen implements Screen, InputProcessor {
 			return true;
 		}
 
-		KeyPress pressed = new KeyPress(UIUtils.ctrl(), UIUtils.shift(), UIUtils.alt(), keyCode);
-		System.out.printf("Key pressed: %s\n", pressed.toString());
-		lastKeyPressText.setText(pressed.toString());
+		
 		
 		if(!done){
 			processUserKeyPress(keyCode);
@@ -349,6 +353,11 @@ public class ReviewScreen implements Screen, InputProcessor {
 	}
 
 	private void processUserKeyPress(int keyCode) {
+		
+		KeyPress pressed = new KeyPress(UIUtils.ctrl(), UIUtils.shift(), UIUtils.alt(), keyCode);
+		System.out.printf("Key pressed: %s\n", pressed.toString());
+		lastKeyPressText.setText(pressed.toString());
+		
 		// See if the key pressed was the one required
 		KeyPress curKeyPress = curCardItems.get(keyPressIndex);
 		if (!cardCompleted && curCardItems != null) {
