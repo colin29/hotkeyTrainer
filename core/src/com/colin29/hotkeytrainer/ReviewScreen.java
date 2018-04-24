@@ -8,6 +8,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -494,7 +495,12 @@ public class ReviewScreen implements Screen, InputProcessor {
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		// TODO Auto-generated method stub
+		if (button == Buttons.LEFT) {
+			processUserKeyPress(KeyPress.MOUSE_LEFT);
+		} else if (button == Buttons.RIGHT) {
+			processUserKeyPress(KeyPress.MOUSE_RIGHT);
+		}
+
 		return false;
 	}
 

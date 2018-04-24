@@ -22,6 +22,10 @@ public class KeyPress implements java.io.Serializable {
 			}
 		}
 	}
+	
+	public static final int MOUSE_LEFT = Keys.SOFT_LEFT;
+	public static final int MOUSE_RIGHT = Keys.SOFT_RIGHT;
+	
 	private static final long serialVersionUID = 1;
 	
 	private boolean ctrl;
@@ -61,6 +65,14 @@ public class KeyPress implements java.io.Serializable {
 	
 	public String toString(){
 		String s = Keys.toString(keyCode);
+		
+		switch (keyCode){
+		case MOUSE_LEFT:
+			s = "LClick";
+			break;
+		case MOUSE_RIGHT:
+			s= "RClick";
+		}
 		
 		//Prepend modifiers in reverse order
 		s = alt ? "ALT + " + s : s;
