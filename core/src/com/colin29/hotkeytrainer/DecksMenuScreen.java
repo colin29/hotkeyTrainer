@@ -72,6 +72,7 @@ public class DecksMenuScreen implements Screen {
 		for(Deck deck: decks){
 			deckTable.row();
 			
+			
 			LabelStyle labelStyle = new Label.LabelStyle(app.font_size2, Color.BLACK);
 			String name = deck.getName() == "" ? "Untitled Deck" :
 				deck.getName();
@@ -80,7 +81,6 @@ public class DecksMenuScreen implements Screen {
 				@Override
 				public void clicked (InputEvent event, float x, float y) {
 //					openEditorWithThisDeck(deck);
-					
 					 DeckScreen deckScreen = new DeckScreen(deck, app);
 					 app.setScreen(deckScreen);
 				}
@@ -88,7 +88,9 @@ public class DecksMenuScreen implements Screen {
 			deckName.setTouchable(Touchable.enabled);
 			
 			deckTable.add(deckName);
-			deckTable.add(new Label("(" + deck.getHotkeys().size + " cards)", labelStyle));	
+			System.out.printf("Deck Size: %o \n",  deck.getHotkeys().size);
+//			deckTable.add(new Label("(" + deck.getHotkeys().size + " cards)", labelStyle));	
+			deckTable.add(new Label("(" + deck.getHotkeys().size + " cards)", labelStyle));
 		}		
 		deckTable.pack();
 	}

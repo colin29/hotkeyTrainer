@@ -41,7 +41,7 @@ public class MyIO {
 		} finally {
 			input.close();
 		}
-		System.out.printf("Deck size: %s\n", deck.getHotkeys().size);
+//		System.out.printf("Deck size: %s\n", deck.getHotkeys().size);
 		return deck;
 	}
 

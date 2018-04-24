@@ -339,8 +339,11 @@ public class ReviewScreen implements Screen, InputProcessor {
 		KeyPress pressed = new KeyPress(UIUtils.ctrl(), UIUtils.shift(), UIUtils.alt(), keyCode);
 		System.out.printf("Key pressed: %s\n", pressed.toString());
 		lastKeyPressText.setText(pressed.toString());
-
-		processUserKeyPress(keyCode);
+		
+		if(!done){
+			processUserKeyPress(keyCode);
+		}
+		
 
 		return true;
 	}
@@ -370,9 +373,9 @@ public class ReviewScreen implements Screen, InputProcessor {
 	private void updateProgressText() {
 		String str;
 		if(app.settings.endlessMode){
-			str = String.format("Cards Cleared: %o (%o in deck)", cardsFinishedCount, cardList.size);
+			str = String.format("Cards Cleared: %d (%d in deck)", cardsFinishedCount, cardList.size);
 		}else{
-			str = String.format("Cards Left: %o", cardList.size - curIndex);
+			str = String.format("Cards Left: %d", cardList.size - curIndex);
 		}
 		
 		
@@ -495,18 +498,18 @@ public class ReviewScreen implements Screen, InputProcessor {
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		if (button == Buttons.LEFT) {
-			processUserKeyPress(KeyPress.MOUSE_LEFT);
-		} else if (button == Buttons.RIGHT) {
-			processUserKeyPress(KeyPress.MOUSE_RIGHT);
-		}
+		
 
 		return false;
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		// TODO Auto-generated method stub
+		if (button == Buttons.LEFT) {
+			processUserKeyPress(KeyPress.MOUSE_LEFT);
+		} else if (button == Buttons.RIGHT) {
+			processUserKeyPress(KeyPress.MOUSE_RIGHT);
+		}
 		return false;
 	}
 

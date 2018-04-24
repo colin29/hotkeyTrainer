@@ -68,10 +68,10 @@ public class KeyPress implements java.io.Serializable {
 		
 		switch (keyCode){
 		case MOUSE_LEFT:
-			s = "LClick";
+			s = "(Lclick)";
 			break;
 		case MOUSE_RIGHT:
-			s= "RClick";
+			s= "(Rclick)";
 		}
 		
 		//Prepend modifiers in reverse order
