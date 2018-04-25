@@ -11,6 +11,6 @@ public class DesktopLauncher {
 		config.height = 480;
 		
 		config.samples = 5;
-		new LwjglApplication(new HotkeyApp(), config);
+		new MyLwjglApplication(new HotkeyApp(), config);
 	}
 }

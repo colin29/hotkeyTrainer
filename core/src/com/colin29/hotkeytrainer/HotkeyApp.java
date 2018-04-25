@@ -24,6 +24,7 @@ import com.colin29.hotkeytrainer.data.KeyPress;
 import com.colin29.hotkeytrainer.editor.DeckEditorScreen;
 import com.colin29.hotkeytrainer.util.KeyTracker;
 import com.colin29.hotkeytrainer.util.MyIO;
+import com.colin29.hotkeytrainer.util.exception.StackTraceAppender;
 import com.esotericsoftware.kryo.Kryo;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
@@ -67,6 +68,8 @@ public class HotkeyApp extends Game implements InputProcessor {
 
 	@Override
 	public void create() {
+		
+		
 		batch = new SpriteBatch();
 		printDirectory(".");
 
@@ -95,7 +98,6 @@ public class HotkeyApp extends Game implements InputProcessor {
 
 
 	}
-
 
 	private void initScreens() {
 		decksMenu = new DecksMenuScreen(this);
@@ -135,8 +137,15 @@ public class HotkeyApp extends Game implements InputProcessor {
 
 	@Override
 	public void render() {
+
+		try{
 		super.render(); // Calls Game.render, which will render the screens
 		VOLUME_SFX = settings.soundOn ? 1f : 0;
+		} catch (Exception e) {
+			StackTraceAppender.appendToFile(e);
+			System.out.println("Exception logged to file");
+			throw(e);
+		}
 	}
 
 	@Override

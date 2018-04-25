@@ -71,14 +71,22 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 		this.skin = app.skin;
 
 		createUI();
-		createTestDeck();
+		loadEmptyDeck();
 	}
 
-	private void createTestDeck() {
+	private void loadTestDeck() {
 		Array<Card> array = new Array<Card>();
 		array.add(new Card(new KeyPress(KeyPress.ModifierKey.CTRL, Keys.NUM_5)));
 		array.add(new Card(new KeyPress(Keys.NUM_9)));
 		array.add(new Card(new KeyPress(Keys.NUM_3)));
+
+		Deck testDeck = new Deck(array);
+		loadDeck(testDeck);
+		putCurrentDeckInWindow();
+	}
+	
+	private void loadEmptyDeck() {
+		Array<Card> array = new Array<Card>();
 
 		Deck testDeck = new Deck(array);
 		loadDeck(testDeck);
@@ -384,7 +392,7 @@ public class DeckEditorScreen implements Screen, InputProcessor {
 			System.out.println(diskCopy.name());
 			fileChooser.setDefaultFileName(diskCopy.name());
 		} else {
-			fileChooser.setDefaultFileName("");
+			fileChooser.setDefaultFileName(".deck");
 		}
 		stage.addActor(fileChooser);
 	}

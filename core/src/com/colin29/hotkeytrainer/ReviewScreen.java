@@ -343,7 +343,6 @@ public class ReviewScreen implements Screen, InputProcessor {
 		}
 
 		
-		
 		if(!done){
 			processUserKeyPress(keyCode);
 		}
